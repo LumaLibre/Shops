@@ -10,11 +10,16 @@ repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://repo.jsinco.dev/releases")
+    maven("https://jitpack.io")
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
     compileOnly("dev.lumas.core:LumaCore:0383263")
+    compileOnly("dev.lumas.lumaitems:LumaItems:42e7303")
+    compileOnly("com.github.MilkBowl:VaultAPI:1.7") {
+        isTransitive = false
+    }
 }
 
 java {

@@ -1,9 +1,13 @@
 package dev.lumas.shops.components;
 
-import dev.lumas.shops.components.serial.SerialComponent;
+import dev.lumas.shops.components.data.SlotEntry;
+import dev.lumas.shops.constants.MarketSlot;
 import dev.lumas.shops.interfaces.Transformable;
 import lombok.Getter;
 import lombok.experimental.Accessors;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.key.Keyed;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -21,10 +25,12 @@ import java.util.stream.IntStream;
 @NullMarked
 @Accessors(fluent = true)
 @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-public class Market implements Transformable<Inventory>, InventoryHolder {
+public class Market implements Transformable<Inventory>, InventoryHolder, Keyed {
 
+    private final Key key;
+
+    private final Component title;
     private final int size;
-    private final SerialComponent title;
 
     private final List<SlotEntry> staticSlots; // borders + buttons, passed in
     private final List<MarketItem> items;
@@ -36,12 +42,13 @@ public class Market implements Transformable<Inventory>, InventoryHolder {
 
     private int page = 0;
 
-    public Market(int size, SerialComponent title, List<SlotEntry> staticSlots, List<MarketItem> items) {
-        this.size = size;
+    public Market(Key key, Component title, int size, List<SlotEntry> staticSlots, List<MarketItem> items) {
+        this.key = key;
         this.title = title;
+        this.size = size;
         this.staticSlots = staticSlots;
         this.items = items;
-        this.inv = Bukkit.createInventory(this, size, title.get());
+        this.inv = Bukkit.createInventory(this, size, title);
         this.contentSlots = this.computeContentSlots();
         this.render();
     }
@@ -91,7 +98,7 @@ public class Market implements Transformable<Inventory>, InventoryHolder {
         for (SlotEntry entry : staticSlots) {
             if (entry.type() == MarketSlot.PREVIOUS_PAGE && !hasPreviousPage()) continue;
             if (entry.type() == MarketSlot.NEXT_PAGE && !hasNextPage()) continue;
-            inv.setItem(entry.slot(), entry.stack().transform());
+            inv.setItem(entry.slot(), entry.stack());
             slotTypes.put(entry.slot(), entry.type());
         }
 
@@ -100,8 +107,7 @@ public class Market implements Transformable<Inventory>, InventoryHolder {
         for (int i = start; i < end; i++) {
             int slot = contentSlots.get(i - start);
             MarketItem item = items.get(i);
-            item.stack().
-            inv.setItem(slot, item.stack().transform());
+            inv.setItem(slot, item.stack());
             slotTypes.put(slot, MarketSlot.CONTENT);
             slotItems.put(slot, item);
         }

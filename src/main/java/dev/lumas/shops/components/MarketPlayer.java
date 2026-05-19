@@ -1,14 +1,14 @@
 package dev.lumas.shops.components;
 
 import com.google.common.base.Preconditions;
-import dev.lumas.shops.components.serial.SerialKeyToIntMap;
+import dev.lumas.shops.components.data.PurchaseFingerPrint;
 import lombok.RequiredArgsConstructor;
-import net.kyori.adventure.key.Key;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -17,7 +17,7 @@ import java.util.UUID;
 public class MarketPlayer {
 
     private final UUID uuid;
-    private final SerialKeyToIntMap<Key> purchased = SerialKeyToIntMap.ofRaw();
+    private final Map<PurchaseFingerPrint, Integer> purchased = new HashMap<>();
 
 
     @Nullable
@@ -29,12 +29,11 @@ public class MarketPlayer {
         return Preconditions.checkNotNull(getPlayer(), "Player not online");
     }
 
-    public int getPurchasesOf(Key shopItemKey) {
-        return purchased.get().getOrDefault(shopItemKey, 0);
+    public int getPurchasesOf(PurchaseFingerPrint fingerPrint) {
+        return purchased.getOrDefault(fingerPrint, 0);
     }
 
-    public void addPurchase(Key shopItemKey) {
-        Map<Key, Integer> map = purchased.get();
-        map.put(shopItemKey, map.getOrDefault(shopItemKey, 0) + 1);
+    public void addPurchase(PurchaseFingerPrint fingerPrint) {
+        purchased.put(fingerPrint, purchased.getOrDefault(fingerPrint, 0) + 1);
     }
 }

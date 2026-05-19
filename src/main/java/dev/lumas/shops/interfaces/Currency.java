@@ -1,8 +1,9 @@
 package dev.lumas.shops.interfaces;
 
+import dev.lumas.shops.constants.suppliers.Currencies;
 import org.bukkit.entity.Player;
 
-public interface Currency<T extends Number> {
+public interface Currency<T extends Number> extends EnumType<Currencies> {
 
     T getBalance(Player player);
 
