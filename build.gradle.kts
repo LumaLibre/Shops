@@ -1,0 +1,22 @@
+plugins {
+    id("java")
+    id("io.freefair.lombok") version "9.5.0"
+}
+
+group = "dev.lumas.shops"
+version = "1.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+    maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://repo.jsinco.dev/releases")
+}
+
+dependencies {
+    compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
+    compileOnly("dev.lumas.core:LumaCore:0383263")
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
+}
