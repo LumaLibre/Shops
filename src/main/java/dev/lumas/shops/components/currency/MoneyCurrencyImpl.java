@@ -23,6 +23,11 @@ public record MoneyCurrencyImpl(double cost) implements Currency<Double> {
     }
 
     @Override
+    public String price() {
+        return "$" + String.format("%.2f", cost);
+    }
+
+    @Override
     public Object get() {
         return cost;
     }

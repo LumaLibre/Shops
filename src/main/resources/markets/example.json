@@ -1,0 +1,48 @@
+{
+  "key": "shops:example",
+  "title": "<gold>Example Market</gold>",
+  "size": 27,
+  "staticSlots": [
+    {
+      "slot": 18,
+      "stack": "AQABCgAACgAJaWRzCgAACQAAAAAJaWRzAA==",
+      "type": "PREVIOUS_PAGE"
+    },
+    {
+      "slot": 26,
+      "stack": "AQABCgAACgAJaWRzCgAACQAAAAAJaWRzAA==",
+      "type": "NEXT_PAGE"
+    }
+  ],
+  "items": [
+    {
+      "key": "shops:example/diamond",
+      "stack": "AQABCgAACgAJaWRzCgAACQAAAAAJaWRzAA==",
+      "currency": {
+        "type": "MONEY",
+        "value": 100
+      },
+      "product": {
+        "type": "COMMAND",
+        "value": "give {player} diamond {amount}"
+      },
+      "playerStock": 0,
+      "globalStock": 0
+    },
+    {
+      "key": "shops:example/golden_apple",
+      "stack": "AQABCgAACgAJaWRzCgAACQAAAAAJaWRzAA==",
+      "currency": {
+        "type": "MONEY",
+        "value": 250
+      },
+      "product": {
+        "type": "COMMAND",
+        "value": "give {player} golden_apple {amount}"
+      },
+      "playerStock": 3,
+      "globalStock": 0
+    }
+  ],
+  "receipts": []
+}

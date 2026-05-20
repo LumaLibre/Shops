@@ -68,7 +68,7 @@ public final class GsonHolder implements Service, Accessor<Gson> {
 
     }
 
-    public static GsonHolder getInstance() {
+    public static GsonHolder instance() {
         return (GsonHolder) Services.getTracked(GsonHolder.class);
     }
 

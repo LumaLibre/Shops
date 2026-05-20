@@ -2,6 +2,8 @@ package dev.lumas.shops.components.currency;
 
 import dev.lumas.shops.constants.suppliers.Currencies;
 import dev.lumas.shops.interfaces.Currency;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.entity.Player;
 
 // TODO: Implement
@@ -25,6 +27,11 @@ public record LumaItemsCurrencyImpl(LumaItemsAmount amount) implements Currency<
     @Override
     public Object get() {
         return amount;
+    }
+
+    @Override
+    public String price() {
+        return amount.amount() + "x " + amount.key(); // TODO: Implement
     }
 
     public record LumaItemsAmount(String key, int amount) {

@@ -5,7 +5,6 @@ import dev.lumas.shops.components.currency.LumaItemsCurrencyImpl;
 import dev.lumas.shops.components.currency.MoneyCurrencyImpl;
 import dev.lumas.shops.components.data.TypedEntry;
 import dev.lumas.shops.interfaces.Currency;
-import org.bukkit.inventory.ItemStack;
 
 public enum Currencies {
     MONEY(new TypedEntry<>(Double.class, MoneyCurrencyImpl::new)),

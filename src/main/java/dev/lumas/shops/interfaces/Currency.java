@@ -9,6 +9,8 @@ public interface Currency<T extends Number> extends EnumType<Currencies> {
 
     boolean withdraw(Player player, T amount);
 
+    String price();
+
     default boolean hasEnough(Player player, T amount) {
         return getBalance(player).doubleValue() >= amount.doubleValue();
     }

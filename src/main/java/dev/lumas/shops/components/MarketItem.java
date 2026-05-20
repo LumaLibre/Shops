@@ -1,6 +1,6 @@
 package dev.lumas.shops.components;
 
-import dev.lumas.shops.components.data.PurchaseFingerPrint;
+import dev.lumas.shops.components.data.PurchaseReceipt;
 import dev.lumas.shops.constants.PurchaseResult;
 import dev.lumas.shops.interfaces.Currency;
 import dev.lumas.shops.interfaces.Product;
@@ -20,7 +20,6 @@ import org.jspecify.annotations.NullMarked;
 public class MarketItem implements Keyed {
 
     private final Key key;
-    private final ItemStack stack;
     private final Currency<Number> currency;
     private final Product product;
 
@@ -29,26 +28,24 @@ public class MarketItem implements Keyed {
     private final int playerStock; // How many times a single player can purchase this item
     private final int globalStock; // How many times this item can be purchased globally
 
-    private int purchases;
+    private final ItemStack stack;
 
 
-    public PurchaseResult purchase(Market market, MarketPlayer marketPlayer) {
-        Player player = marketPlayer.getPlayerOrThrow();
+    public PurchaseResult purchase(Market market, Player player) {
         if (!currency.hasEnough(player, cost)) {
             return PurchaseResult.NOT_ENOUGH_CURRENCY;
         }
-        PurchaseFingerPrint fingerPrint = PurchaseFingerPrint.of(market.key(), key);
+        PurchaseReceipt fingerPrint = PurchaseReceipt.of(player.getUniqueId(), key);
         // TODO: Maybe should be -1?
-        if (playerStock > 0 && marketPlayer.getPurchasesOf(fingerPrint) >= playerStock) {
+        if (playerStock > 0 && market.getPurchasesOf(fingerPrint) >= playerStock) {
             return PurchaseResult.TOO_MANY_PURCHASES;
-        } else if (globalStock > 0 && purchases + 1 > globalStock) {
+        } else if (globalStock > 0 && market.getGlobalPurchasesOf(key) + 1 > globalStock) {
             return PurchaseResult.NOT_ENOUGH_STOCK;
         }
 
         if (currency.withdraw(player, cost)) {
+            market.addPurchase(fingerPrint);
             product.give(player, 1);
-            marketPlayer.addPurchase(fingerPrint);
-            purchases++;
         } else {
             throw new IllegalStateException("Currency withdraw failed");
         }
