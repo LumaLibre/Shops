@@ -1,23 +1,23 @@
 {
   "key": "shops:example",
   "title": "<gold>Example Market</gold>",
-  "size": 54,
+  "size": 27,
   "staticSlots": [
     {
       "slot": 18,
-      "stack": "AQABCgAACgAJaWRzCgAACQAAAAAJaWRzAA==",
+      "stack": "H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQ2sbBwJSZwsCfm5mXmlyUmFZilVhUlF/OzMCanF+aV8LAwMDIAAANj1tROAAAAA==",
       "type": "PREVIOUS_PAGE"
     },
     {
       "slot": 26,
-      "stack": "AQABCgAACgAJaWRzCgAACQAAAAAJaWRzAA==",
+      "stack": "H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQ2sbBwJSZwiCRm5mXmlyUmFZiVVyQmlxSlJgTn1hUlF/OzMCanF+aV8LAwMDIAADhNXR4QQAAAA==",
       "type": "NEXT_PAGE"
     }
   ],
   "items": [
     {
       "key": "shops:example/diamond",
-      "stack": "AQABCgAACgAJaWRzCgAACQAAAAAJaWRzAA==",
+      "stack": "H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQ2sbBwJSZwiCYm5mXmlyUmFZilZKZmJufl8LMwJqcX5pXwsDAwMgAAA6JnFw6AAAA",
       "currency": {
         "type": "MONEY",
         "value": 100
@@ -31,7 +31,7 @@
     },
     {
       "key": "shops:example/golden_apple",
-      "stack": "AQABCgAACgAJaWRzCgAACQAAAAAJaWRzAA==",
+      "stack": "H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQ2sbBwJSZwiCWm5mXmlyUmFZilZ6fk5KaF59YUJCTyszAmpxfmlfCwMDAyAAAThfHUT8AAAA=",
       "currency": {
         "type": "MONEY",
         "value": 250

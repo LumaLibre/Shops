@@ -12,12 +12,12 @@ public record ItemStackCurrencyImpl(ItemStackAmount amount) implements Currency<
 
     @Override
     public Integer getBalance(Player player) {
-        return 0;
+        throw new UnsupportedOperationException("Not implemented yet.");
     }
 
     @Override
-    public boolean withdraw(Player player, Integer amount) {
-        return false;
+    public boolean withdraw(Player player) {
+        throw new UnsupportedOperationException("Not implemented yet.");
     }
 
     @Override
@@ -31,7 +31,7 @@ public record ItemStackCurrencyImpl(ItemStackAmount amount) implements Currency<
     }
 
     @Override
-    public String price() {
+    public String readablePrice() {
         Component customName = amount.itemStack().getItemMeta().customName();
         String simpleItemName;
 
@@ -42,6 +42,11 @@ public record ItemStackCurrencyImpl(ItemStackAmount amount) implements Currency<
         }
 
         return amount.amount() + "x " + simpleItemName;
+    }
+
+    @Override
+    public Integer price() {
+        return amount.amount();
     }
 
     public record ItemStackAmount(ItemStack itemStack, int amount) {

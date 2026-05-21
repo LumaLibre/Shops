@@ -1,40 +1,32 @@
 package dev.lumas.shops.components.data;
 
-import lombok.experimental.Accessors;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.KeyPattern;
 import net.kyori.adventure.key.Keyed;
-import org.jetbrains.annotations.NotNull;
+import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 @NullMarked
-public record KeyConsumer<T>(Key key, Consumer<T> consumer) implements Key {
+public record KeyConsumer<T>(Key key, @Nullable T parent, BiConsumer<@Nullable T, Player> consumer) implements Keyed {
 
-    public void call(T t) {
-        consumer.accept(t);
+    public static <T> KeyConsumer<T> of(Key key, BiConsumer<T, Player> consumer) {
+        return new KeyConsumer<>(key, null, consumer);
     }
 
-    public static <T> KeyConsumer<T> of(Key key, Consumer<T> consumer) {
-        return new KeyConsumer<>(key, consumer);
+    public static KeyConsumer<Void> of(Key key, Runnable runnable) {
+        return new KeyConsumer<>(key, null, (_, _) -> runnable.run());
     }
 
-
-    @Override
-    @KeyPattern.Namespace
-    public String namespace() {
-        return key.namespace();
+    public KeyConsumer<T> withParent(T parent) {
+        return new KeyConsumer<>(key, parent, consumer);
     }
 
-    @Override
-    @KeyPattern.Value
-    public String value() {
-        return key.value();
+    public void call(Player player) {
+        consumer.accept(parent, player);
     }
 
-    @Override
-    public String asString() {
-        return key.asString();
-    }
 }

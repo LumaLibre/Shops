@@ -23,8 +23,6 @@ public class MarketItem implements Keyed {
     private final Currency<Number> currency;
     private final Product product;
 
-
-    private final Number cost;
     private final int playerStock; // How many times a single player can purchase this item
     private final int globalStock; // How many times this item can be purchased globally
 
@@ -32,18 +30,18 @@ public class MarketItem implements Keyed {
 
 
     public PurchaseResult purchase(Market market, Player player) {
-        if (!currency.hasEnough(player, cost)) {
+        if (!currency.hasEnough(player)) {
             return PurchaseResult.NOT_ENOUGH_CURRENCY;
         }
         PurchaseReceipt fingerPrint = PurchaseReceipt.of(player.getUniqueId(), key);
-        // TODO: Maybe should be -1?
+
         if (playerStock > 0 && market.getPurchasesOf(fingerPrint) >= playerStock) {
             return PurchaseResult.TOO_MANY_PURCHASES;
         } else if (globalStock > 0 && market.getGlobalPurchasesOf(key) + 1 > globalStock) {
             return PurchaseResult.NOT_ENOUGH_STOCK;
         }
 
-        if (currency.withdraw(player, cost)) {
+        if (currency.withdraw(player)) {
             market.addPurchase(fingerPrint);
             product.give(player, 1);
         } else {

@@ -1,0 +1,6 @@
+name: Shops
+main: dev.lumas.shops.Shops
+version: 1.0-SNAPSHOT
+api-version: 26.1.2
+depend: [LumaCore]
+softdepend: [Vault]

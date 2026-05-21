@@ -4,6 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import dev.lumas.core.annotation.Autowire;
+import dev.lumas.core.annotation.Register;
 import dev.lumas.core.manager.Reflect;
 import dev.lumas.core.manager.Services;
 import dev.lumas.core.model.Service;
@@ -18,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+@Register(Autowire.SERVICE)
 public final class GsonHolder implements Service, Accessor<Gson> {
 
     private final Gson gson;

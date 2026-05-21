@@ -1,19 +1,21 @@
 package dev.lumas.shops.components;
 
-import dev.lumas.shops.components.data.PurchaseReceipt;
 import dev.lumas.shops.components.data.SlotEntry;
+import dev.lumas.shops.components.dialog.ConfirmationDialog;
+import dev.lumas.shops.components.templates.MarketState;
+import dev.lumas.shops.components.templates.MarketTemplate;
 import dev.lumas.shops.constants.MarketSlot;
+import dev.lumas.shops.interfaces.ShopsInventory;
 import lombok.Getter;
 import lombok.experimental.Accessors;
-import net.kyori.adventure.key.Key;
+import lombok.experimental.Delegate;
 import net.kyori.adventure.key.Keyed;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -27,51 +29,44 @@ import java.util.stream.IntStream;
 @NullMarked
 @Accessors(fluent = true)
 @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-public class Market implements InventoryHolder, Keyed {
+public class Market implements ShopsInventory, Keyed {
 
-    private final Key key;
-
-    private final Component title;
-    private final int size;
-
-    private final List<SlotEntry> staticSlots; // borders + buttons, passed in
-    private final List<MarketItem> items;
-
-    private final Map<PurchaseReceipt, Integer> receipts;
+    @Delegate
+    private final MarketTemplate template;
+    @Delegate
+    private final MarketState state;
 
     @Accessors(fluent = false)
-    private final transient Inventory inventory;
-    private final transient List<Integer> contentSlots; // computed: everything not claimed by staticSlots
-    private final transient Map<Integer, MarketSlot> slotTypes = new HashMap<>();
-    private final transient Map<Integer, MarketItem> slotItems = new HashMap<>();
+    private final Inventory inventory;
+    private final List<Integer> contentSlots; // computed: everything not claimed by static slots
+    private final Map<Integer, MarketSlot> slotTypes = new HashMap<>();
+    private final Map<Integer, MarketItem> slotItems = new HashMap<>();
 
-    private transient int page = 0;
+    private int page = 0;
 
-    public Market(Key key, Component title, int size, List<SlotEntry> staticSlots, List<MarketItem> items, Map<PurchaseReceipt, Integer> receipts) {
-        this.key = key;
-        this.title = title;
-        this.size = size;
-        this.staticSlots = staticSlots;
-        this.items = items;
-        this.receipts = receipts;
-        this.inventory = Bukkit.createInventory(this, size, title);
+    public Market(MarketTemplate template, MarketState state) {
+        this.template = template;
+        this.state = state;
+        this.inventory = Bukkit.createInventory(this, template.size(), template.title());
         this.contentSlots = this.computeContentSlots();
         this.render();
     }
 
     private List<Integer> computeContentSlots() {
-        var claimed = staticSlots.stream().map(SlotEntry::slot).collect(Collectors.toSet());
-        return IntStream.range(0, size)
+        var claimed = template.staticSlots().stream().map(SlotEntry::slot).collect(Collectors.toSet());
+        return IntStream.range(0, template.size())
                 .filter(i -> !claimed.contains(i))
                 .boxed()
                 .toList();
     }
+
 
     public int pageCapacity() {
         return contentSlots.size();
     }
 
     public int pageCount() {
+        List<MarketItem> items = template.items();
         if (items.isEmpty()) return 1;
         return (items.size() + pageCapacity() - 1) / pageCapacity();
     }
@@ -96,18 +91,20 @@ public class Market implements InventoryHolder, Keyed {
         this.render();
     }
 
+
     public void render() {
         inventory.clear();
         slotTypes.clear();
         slotItems.clear();
 
-        for (SlotEntry entry : staticSlots) {
+        for (SlotEntry entry : template.staticSlots()) {
             if (entry.type() == MarketSlot.PREVIOUS_PAGE && !hasPreviousPage()) continue;
             if (entry.type() == MarketSlot.NEXT_PAGE && !hasNextPage()) continue;
             inventory.setItem(entry.slot(), entry.stack());
             slotTypes.put(entry.slot(), entry.type());
         }
 
+        List<MarketItem> items = template.items();
         int start = page * pageCapacity();
         int end = Math.min(start + pageCapacity(), items.size());
         for (int i = start; i < end; i++) {
@@ -123,26 +120,15 @@ public class Market implements InventoryHolder, Keyed {
         return slotTypes.getOrDefault(slot, MarketSlot.BORDER);
     }
 
+    @Nullable
     public MarketItem itemAt(int slot) {
         return slotItems.get(slot);
     }
 
-    public int getPurchasesOf(PurchaseReceipt fingerPrint) {
-        return receipts.getOrDefault(fingerPrint, 0);
-    }
 
-    public int getGlobalPurchasesOf(Key key) {
-        int total = 0;
-        for (Map.Entry<PurchaseReceipt, Integer> entry : receipts.entrySet()) {
-            if (entry.getKey().marketItemKey().equals(key)) {
-                total += entry.getValue();
-            }
-        }
-        return total;
-    }
-
-    public void addPurchase(PurchaseReceipt fingerPrint) {
-        receipts.put(fingerPrint, receipts.getOrDefault(fingerPrint, 0) + 1);
+    public void prePurchase(MarketItem marketItem, Player player) {
+        ConfirmationDialog dialog = new ConfirmationDialog(this, marketItem);
+        dialog.show(player);
     }
 
     public void handleClick(InventoryClickEvent event) {
@@ -153,9 +139,10 @@ public class Market implements InventoryHolder, Keyed {
 
         switch (type) {
             case CONTENT -> {
-                // TODO: add dialog here for confirmation
                 MarketItem item = itemAt(slot);
-                item.purchase(this, player);
+                if (item != null) {
+                    this.prePurchase(item, player);
+                }
             }
             case PREVIOUS_PAGE -> previousPage();
             case NEXT_PAGE -> nextPage();
@@ -163,5 +150,4 @@ public class Market implements InventoryHolder, Keyed {
             case BORDER -> {}
         }
     }
-
 }

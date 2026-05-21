@@ -6,7 +6,6 @@ import dev.lumas.lumaitems.model.item.CustomItem;
 import dev.lumas.shops.constants.suppliers.Products;
 import dev.lumas.shops.interfaces.EnumType;
 import dev.lumas.shops.interfaces.Product;
-import lombok.AllArgsConstructor;
 import org.bukkit.entity.Player;
 
 public record LumaItemsProductImpl(String key) implements Product, EnumType<Products> {

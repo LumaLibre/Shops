@@ -1,5 +1,7 @@
 package dev.lumas.shops.config;
 
+import dev.lumas.core.annotation.Autowire;
+import dev.lumas.core.annotation.Register;
 import dev.lumas.core.manager.Services;
 import dev.lumas.core.model.Service;
 import dev.lumas.core.util.PluginContextLogger;
@@ -47,6 +49,7 @@ import java.util.Properties;
  * Files are named "<language-tag>.lang.properties", e.g. "en-US.lang.properties".
  * Keys use MiniMessage syntax: "shops.greet=<green>Hello, <arg:0>!"
  */
+@Register(Autowire.SERVICE)
 public class TranslatorService extends MiniMessageTranslator implements Service {
 
     private static final String LANG_SUFFIX = ".lang.properties";
