@@ -1,5 +1,6 @@
 package dev.lumas.shops.components.templates;
 
+import dev.lumas.shops.components.MarketManager;
 import dev.lumas.shops.components.data.PurchaseReceipt;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -8,30 +9,19 @@ import net.kyori.adventure.key.Keyed;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * Mutable shared state for a market, persisted to {@code markets/<key>.state.json}.
  * One instance per market key, shared across all players viewing it.
- *
- * <p>Mutations should go through {@link dev.lumas.shops.MarketManager#save(MarketState)}
- * to write the change to disk.
  */
-@Getter
 @NullMarked
 @Accessors(fluent = true)
-public class MarketState implements Keyed {
-
-    private final Key key;
-    private final Map<PurchaseReceipt, Integer> receipts;
+public record MarketState(Key key, Map<PurchaseReceipt, Integer> receipts) implements Keyed {
 
     public MarketState(Key key) {
-        this(key, new HashMap<>());
-    }
-
-    public MarketState(Key key, Map<PurchaseReceipt, Integer> receipts) {
-        this.key = key;
-        this.receipts = receipts;
+        this(key, new LinkedHashMap<>());
     }
 
     public int getPurchasesOf(PurchaseReceipt receipt) {
@@ -48,7 +38,12 @@ public class MarketState implements Keyed {
         return total;
     }
 
+    public int getRemainingGlobalStock(int globalStock, Key marketItemKey) {
+        return globalStock - getGlobalPurchasesOf(marketItemKey);
+    }
+
     public void addPurchase(PurchaseReceipt receipt) {
         receipts.merge(receipt, 1, Integer::sum);
+        MarketManager.INSTANCE.save(this);
     }
 }

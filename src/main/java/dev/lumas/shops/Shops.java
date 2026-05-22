@@ -1,6 +1,7 @@
 package dev.lumas.shops;
 
 import dev.lumas.core.manager.Modules;
+import dev.lumas.shops.components.MarketManager;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -26,5 +27,6 @@ public final class Shops extends JavaPlugin {
     @Override
     public void onDisable() {
         modules.unregister();
+        MarketManager.INSTANCE.shutdown();
     }
 }

@@ -11,7 +11,6 @@ import java.util.UUID;
  */
 public record PurchaseReceipt(UUID purchaser, Key marketItemKey) {
 
-
     public boolean isSame(PurchaseReceipt other) {
         return this.purchaser.equals(other.purchaser) && this.marketItemKey.equals(other.marketItemKey);
     }

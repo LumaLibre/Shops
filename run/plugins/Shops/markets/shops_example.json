@@ -4,6 +4,11 @@
   "size": 27,
   "staticSlots": [
     {
+      "slot": 15,
+      "stack": {"id":"minecraft:stripped_oak_wood","count":1,"DataVersion":4790},
+      "type": "BORDER"
+    },
+    {
       "slot": 18,
       "stack": "H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQ2sbBwJSZwsCfm5mXmlyUmFZilVhUlF/OzMCanF+aV8LAwMDIAAANj1tROAAAAA==",
       "type": "PREVIOUS_PAGE"
@@ -14,10 +19,12 @@
       "type": "NEXT_PAGE"
     }
   ],
-  "items": [
-    {
-      "key": "shops:example/diamond",
-      "stack": "H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQ2sbBwJSZwiCYm5mXmlyUmFZilZKZmJufl8LMwJqcX5pXwsDAwMgAAA6JnFw6AAAA",
+  "items": {
+    "shops:example/diamond": {
+      "stock": {
+        "player": 0,
+        "global": 0
+      },
       "currency": {
         "type": "MONEY",
         "value": 100
@@ -26,23 +33,25 @@
         "type": "COMMAND",
         "value": "give {player} diamond {amount}"
       },
-      "playerStock": 0,
-      "globalStock": 0
+      "stack": "H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQ2sbBwJSZwiCYm5mXmlyUmFZilZKZmJufl8LMwJqcX5pXwsDAwMgAAA6JnFw6AAAA"
     },
-    {
-      "key": "shops:example/golden_apple",
-      "stack": "H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQ2sbBwJSZwiCWm5mXmlyUmFZilZ6fk5KaF59YUJCTyszAmpxfmlfCwMDAyAAAThfHUT8AAAA=",
+    "shops:example/cinnamon_oxidizer": {
+      "stock": {
+        "player": 0,
+        "global": 0
+      },
       "currency": {
-        "type": "MONEY",
-        "value": 250
+        "type": "LUMAITEMS",
+        "value": {
+          "key": "abominable-howitzer",
+          "amount": 3
+        }
       },
       "product": {
-        "type": "COMMAND",
-        "value": "give {player} golden_apple {amount}"
+        "type": "LUMAITEMS",
+        "value": "cinnamon-oxidizer"
       },
-      "playerStock": 3,
-      "globalStock": 0
+      "stack": {"id":"minecraft:netherite_pickaxe","count":1,"components":{"minecraft:custom_data":"{PublicBukkitValues:{\"lumaitems:cinnamon-oxidizer\":1s,\"lumaitems:lumaitem\":1s}}","minecraft:custom_name":{"text":"","extra":[{"text":"C","color":"#8A2C13"},{"text":"i","color":"#993930"},{"text":"n","color":"#A9464D"},{"text":"n","color":"#B85369"},{"text":"a","color":"#C77173"},{"text":"m","color":"#D69277"},{"text":"o","color":"#E5B37B"},{"text":"n","color":"#EAB96F"},{"text":" ","color":"#E7AD58"},{"text":"O","color":"#E5A040"},{"text":"x","color":"#DE942D"},{"text":"i","color":"#D28820"},{"text":"d","color":"#C67C13"},{"text":"i","color":"#B87009"},{"text":"z","color":"#A26307"},{"text":"e","color":"#8D5705"},{"text":"r","color":"#774B03"}],"bold":true,"italic":false},"minecraft:enchantments":{"minecraft:efficiency":7,"minecraft:fortune":4,"minecraft:knockback":2,"minecraft:mending":1,"minecraft:smite":10,"minecraft:unbreaking":9},"minecraft:tooltip_display":{"hidden_components":["minecraft:attribute_modifiers","minecraft:trim","minecraft:unbreakable","minecraft:dyed_color","minecraft:tropical_fish/pattern","minecraft:map_id","minecraft:block_state","minecraft:bees","minecraft:painting/variant","minecraft:potion_contents","minecraft:written_book_content","minecraft:banner_patterns","minecraft:charged_projectiles","minecraft:instrument","minecraft:fireworks","minecraft:container_loot","minecraft:jukebox_playable","minecraft:firework_explosion","minecraft:block_entity_data","minecraft:bundle_contents","minecraft:container","minecraft:pot_decorations"]},"minecraft:lore":[{"text":"Weatherer","color":"#E39932","italic":false},{"text":"","color":"white","italic":false},{"text":"A mattock with cinnamon-","color":"white","italic":false},{"text":"like coating on the edges","color":"white","italic":false},{"text":"of it. It looks so good","color":"white","italic":false},{"text":"you're inclined to take","color":"white","italic":false},{"text":"a bite.","color":"white","italic":false},{"text":"","color":"white","italic":false},{"text":"When ","extra":[{"text":"breaking","color":"#E39932"}," any kind"],"color":"white","italic":false},{"text":"of unwaxed copper block,","color":"white","italic":false},{"text":"this tool will speed up","color":"white","italic":false},{"text":"the weathering process","color":"white","italic":false},{"text":"to the next stage.","color":"white","italic":false},{"text":"","color":"white","italic":false},{"text":"","extra":[{"text":"       ","strikethrough":true},"⋆⁺₊⋆ ★ ⋆⁺₊⋆",{"text":"       ","strikethrough":true}],"color":"#EEE1D5","italic":false},{"text":"","extra":[{"text":"Tier •","color":"#EEE1D5"}," ",{"text":"","extra":[{"text":"C","color":"#1D7240"},{"text":"h","color":"#408A4A"},{"text":"r","color":"#68A152"},{"text":"i","color":"#B0B056"},{"text":"s","color":"#E6B857"},{"text":"t","color":"#EEB355"},{"text":"m","color":"#F2A14F"},{"text":"a","color":"#F07E44"},{"text":"s","color":"#EF623B"},{"text":" ","color":"#EE4C33"},{"text":"2","color":"#EA3F2F"},{"text":"0","color":"#E5362B"},{"text":"2","color":"#C72A26"},{"text":"5","color":"#A61E20"}],"bold":true}],"color":"white","italic":false},{"text":"","extra":[{"text":"       ","strikethrough":true},"⋆⁺₊⋆ ★ ⋆⁺₊⋆",{"text":"       ","strikethrough":true}],"color":"#EEE1D5","italic":false}],"minecraft:item_model":"minecraft:copper_pickaxe"},"DataVersion":4790}
     }
-  ],
-  "receipts": []
+  }
 }

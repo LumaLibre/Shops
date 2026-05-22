@@ -1,6 +1,9 @@
 package dev.lumas.shops.interfaces;
 
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+
+@NullMarked
 public interface Accessor<T> {
-    T get();
-    default void set(T value) {}
+    @Nullable T get();
 }

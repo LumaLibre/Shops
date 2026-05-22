@@ -1,8 +1,10 @@
 package dev.lumas.shops.components.data;
 
+import io.papermc.paper.dialog.DialogResponseView;
 import net.kyori.adventure.key.Key;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,13 +35,14 @@ public final class KeyConsumerRegistry {
         }
     }
 
-    public boolean dispatch(Player player, Key key) {
+    @SuppressWarnings("UnstableApiUsage")
+    public boolean dispatch(Player player, Key key, DialogResponseView view) {
         Map<Key, KeyConsumer<?>> map = pending.get(player.getUniqueId());
         if (map == null) return false;
         KeyConsumer<?> handler = map.get(key);
         if (handler == null) return false;
         pending.remove(player.getUniqueId());
-        handler.call(player);
+        handler.call(player, view);
         return true;
     }
 

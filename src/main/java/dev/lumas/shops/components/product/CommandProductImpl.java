@@ -1,5 +1,6 @@
 package dev.lumas.shops.components.product;
 
+import dev.lumas.shops.components.MarketItem;
 import dev.lumas.shops.constants.suppliers.Products;
 import dev.lumas.shops.interfaces.Product;
 import dev.lumas.shops.util.Scheduling;
@@ -14,7 +15,7 @@ public record CommandProductImpl(String command) implements Product {
     }
 
     @Override
-    public void give(Player player, int amount) {
+    public void give(Player player, MarketItem marketItem, int amount) {
         String finalCommand = command.replace("{player}", player.getName()).replace("{amount}", String.valueOf(amount));
         Scheduling.global(() -> {
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand);

@@ -5,7 +5,9 @@ import dev.lumas.shops.components.currency.LumaItemsCurrencyImpl;
 import dev.lumas.shops.components.currency.MoneyCurrencyImpl;
 import dev.lumas.shops.components.data.TypedEntry;
 import dev.lumas.shops.interfaces.Currency;
+import org.jspecify.annotations.NullMarked;
 
+@NullMarked
 public enum Currencies {
     MONEY(new TypedEntry<>(Double.class, MoneyCurrencyImpl::new)),
     LUMAITEMS(new TypedEntry<>(LumaItemsCurrencyImpl.LumaItemsAmount.class, LumaItemsCurrencyImpl::new)),

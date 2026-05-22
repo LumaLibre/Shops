@@ -6,8 +6,6 @@ import dev.lumas.core.manager.Services;
 import dev.lumas.core.model.Service;
 import dev.lumas.core.util.PluginContextLogger;
 import dev.lumas.shops.Shops;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.minimessage.translation.MiniMessageTranslator;
 import net.kyori.adventure.translation.GlobalTranslator;
@@ -22,6 +20,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -169,7 +168,18 @@ public class TranslatorService extends MiniMessageTranslator implements Service 
         List<String> keys = new ArrayList<>(props.stringPropertyNames());
         Collections.sort(keys);
         for (String key : keys) {
-            writer.write(key + "=" + props.getProperty(key) + "\n");
+            Properties single = new Properties();
+            single.setProperty(key, props.getProperty(key));
+            // store to a buffer, strip the timestamp line, write the rest
+            StringWriter buf = new StringWriter();
+            single.store(buf, null);
+            String[] lines = buf.toString().split("\n", -1);
+            for (String line : lines) {
+                if (line.startsWith("#")) continue; // strip timestamp comment
+                if (line.isEmpty()) continue;
+                writer.write(line);
+                writer.write('\n');
+            }
         }
     }
 

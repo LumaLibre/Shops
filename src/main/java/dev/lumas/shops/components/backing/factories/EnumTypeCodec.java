@@ -7,6 +7,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import dev.lumas.shops.interfaces.Codec;
 import dev.lumas.shops.interfaces.EnumType;
+import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 
@@ -22,15 +23,18 @@ public abstract class EnumTypeCodec<E extends Enum<E>, T extends EnumType<E>> ex
 
     protected abstract Class<?> inputTypeOf(E type);
 
-    protected abstract T construct(E type, Object value);
+    protected abstract T construct(E type, @Nullable Object value);
 
     @Override
     public void write(JsonWriter out, T value) throws IOException {
         E type = value.type();
         out.beginObject();
         out.name("type").value(type.name());
-        out.name("value");
-        adapterFor(type).write(out, value.get());
+        Object inner = value.get();
+        if (inner != null) {
+            out.name("value");
+            adapterFor(type).write(out, inner);
+        }
         out.endObject();
     }
 
@@ -44,7 +48,7 @@ public abstract class EnumTypeCodec<E extends Enum<E>, T extends EnumType<E>> ex
                 case "type" -> type = Enum.valueOf(enumClass(), in.nextString());
                 case "value" -> {
                     if (type == null) {
-                        throw new IOException("'value' before 'type' not supported");
+                        io("'value' before 'type' not supported");
                     }
                     value = adapterFor(type).read(in);
                 }
@@ -52,10 +56,10 @@ public abstract class EnumTypeCodec<E extends Enum<E>, T extends EnumType<E>> ex
             }
         }
         in.endObject();
-        if (type == null || value == null) {
-            throw new IOException("Missing type or value");
+        if (type == null) {
+            io("Missing type");
         }
-        return construct(type, value);
+        return construct(type, value); // value may be null
     }
 
     @SuppressWarnings("unchecked")

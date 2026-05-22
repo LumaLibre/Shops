@@ -4,6 +4,7 @@ import dev.lumas.shops.components.data.KeyConsumerRegistry;
 import dev.lumas.shops.components.Market;
 import dev.lumas.shops.components.MarketItem;
 import dev.lumas.shops.components.data.KeyConsumer;
+import dev.lumas.shops.interfaces.ShopsDialog;
 import dev.lumas.shops.util.Scheduling;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.registry.data.dialog.ActionButton;
@@ -13,86 +14,74 @@ import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.ComponentLike;
-import net.kyori.adventure.translation.GlobalTranslator;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
-import java.util.Locale;
 
 @NullMarked
 @SuppressWarnings("UnstableApiUsage")
-public class ConfirmationDialog {
+public class ConfirmationDialog extends ShopsDialog {
 
-    private static final KeyConsumer<ConfirmationDialog> YES = KeyConsumer.of(
+    private final KeyConsumer<ConfirmationDialog> yes = KeyConsumer.of(
+            this,
             Key.key("shops:confirm/yes"),
-            ConfirmationDialog::onConfirm
+            (parent, player, _) -> {
+                Scheduling.entity(player, () -> {
+                    var result = parent.marketItem.purchase(parent.market, player);
+                    player.sendMessage("Result: " + result);
+                });
+            }
     );
-    private static final KeyConsumer<ConfirmationDialog> NO = KeyConsumer.of(
+    private final KeyConsumer<ConfirmationDialog> no = KeyConsumer.of(
+            this,
             Key.key("shops:confirm/no"),
-            ConfirmationDialog::onCancel
+            (parent, player, _) -> {
+                parent.market.open(player);
+            }
     );
 
     private final Market market;
     private final MarketItem marketItem;
 
-    public ConfirmationDialog(Market market, MarketItem marketItem) {
+    public ConfirmationDialog(Player player, Market market, MarketItem marketItem) {
+        super(player.locale());
         this.market = market;
         this.marketItem = marketItem;
     }
 
-    public void show(Player player) {
-        KeyConsumerRegistry.INSTANCE.register(player, YES.withParent(this), NO.withParent(this));
-        player.showDialog(buildFor(player));
-    }
-
-    private Dialog buildFor(Player player) {
-        Locale locale = player.locale();
+    @Override
+    public Dialog build() {
         ItemStack itemStack = marketItem.stack();
-        String price = marketItem.currency().readablePrice();
-
-        Component title = tr(locale, "shops.confirm.title");
-        Component description = tr(locale, "shops.confirm.content", Component.text(price));
-        Component yesLabel = tr(locale, "shops.confirm.button.yes");
-        Component noLabel = tr(locale, "shops.confirm.button.no");
+        Component price = marketItem.currency().readablePrice();
 
         DialogBody body = DialogBody.item(itemStack)
-                .description(DialogBody.plainMessage(description))
+                .description(DialogBody.plainMessage(translate("shops.confirm.content", price)))
                 .build();
 
-        ActionButton yes = ActionButton.builder(yesLabel)
-                .action(DialogAction.customClick(YES.key(), null))
+        ActionButton yesButton = ActionButton.builder(translate("shops.confirm.button.yes"))
+                .action(DialogAction.customClick(yes.key(), null))
                 .build();
 
-        ActionButton no = ActionButton.builder(noLabel)
-                .action(DialogAction.customClick(NO.key(), null))
+        ActionButton noButton = ActionButton.builder(translate("shops.confirm.button.no"))
+                .action(DialogAction.customClick(no.key(), null))
                 .build();
 
-        DialogBase base = DialogBase.builder(title)
+        DialogBase base = DialogBase.builder(translate("shops.confirm.title"))
                 .canCloseWithEscape(true)
                 .body(List.of(body))
                 .build();
 
         return Dialog.create(b -> b.empty()
                 .base(base)
-                .type(DialogType.confirmation(yes, no))
+                .type(DialogType.confirmation(yesButton, noButton))
         );
     }
 
-    private static Component tr(Locale locale, String key, ComponentLike... args) {
-        return GlobalTranslator.render(Component.translatable(key, args), locale);
-    }
-
-    private void onConfirm(Player player) {
-        Scheduling.entity(player, () -> {
-            var result = marketItem.purchase(market, player);
-            player.sendMessage("Result: " + result);
-        });
-    }
-
-    private void onCancel(Player player) {
-        market.open(player);
+    @Override
+    public void show(Player player) {
+        KeyConsumerRegistry.INSTANCE.register(player, yes, no);
+        player.showDialog(build());
     }
 }

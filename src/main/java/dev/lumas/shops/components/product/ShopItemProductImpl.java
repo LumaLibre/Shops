@@ -1,15 +1,18 @@
 package dev.lumas.shops.components.product;
 
+import dev.lumas.shops.components.MarketItem;
 import dev.lumas.shops.constants.suppliers.Products;
 import dev.lumas.shops.interfaces.Product;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
-public record ShopItemProductImpl(ItemStack itemStack) implements Product {
+@NullMarked
+public record ShopItemProductImpl() implements Product {
 
     @Override
-    public void give(Player player, int amount) {
-        player.give(itemStack.asQuantity(amount));
+    public void give(Player player, MarketItem marketItem, int amount) {
+        player.give(marketItem.stack().asQuantity(amount));
     }
 
     @Override
@@ -18,7 +21,7 @@ public record ShopItemProductImpl(ItemStack itemStack) implements Product {
     }
 
     @Override
-    public Object get() {
-        return itemStack;
+    public @Nullable Object get() {
+        return null;
     }
 }

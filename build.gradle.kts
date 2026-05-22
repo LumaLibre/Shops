@@ -18,7 +18,7 @@ repositories {
 dependencies {
     //compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
     paperweight.paperDevBundle("26.1.2.build.+")
-    compileOnly("dev.lumas.core:LumaCore:0383263")
+    compileOnly("dev.lumas.core:LumaCore:8271600")
     compileOnly("dev.lumas.lumaitems:LumaItems:42e7303")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7") {
         isTransitive = false

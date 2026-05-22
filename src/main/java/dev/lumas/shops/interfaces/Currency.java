@@ -1,6 +1,7 @@
 package dev.lumas.shops.interfaces;
 
 import dev.lumas.shops.constants.suppliers.Currencies;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 public interface Currency<T extends Number> extends EnumType<Currencies> {
@@ -9,7 +10,7 @@ public interface Currency<T extends Number> extends EnumType<Currencies> {
 
     boolean withdraw(Player player);
 
-    String readablePrice();
+    Component readablePrice();
 
     T price();
 

@@ -3,10 +3,14 @@ package dev.lumas.shops.components;
 import com.google.gson.Gson;
 import dev.lumas.core.util.PluginContextLogger;
 import dev.lumas.shops.Shops;
+import dev.lumas.shops.components.data.SlotEntry;
+import dev.lumas.shops.components.data.SlotList;
 import dev.lumas.shops.components.templates.MarketState;
 import dev.lumas.shops.components.templates.MarketTemplate;
 import dev.lumas.shops.gson.GsonHolder;
+import lombok.SneakyThrows;
 import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
@@ -18,6 +22,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -58,13 +64,7 @@ public class MarketManager {
         return t;
     });
 
-    /**
-     * Builds a fresh {@link Market} for the given player. Each call returns a new
-     * instance so per-player UI state is isolated; the underlying {@link MarketState}
-     * is shared across all callers for the same key.
-     *
-     * @return the constructed market, or {@code null} if no template exists for {@code key}
-     */
+
     public @Nullable Market market(Key key) {
         MarketTemplate template = template(key);
         if (template == null) {
@@ -74,79 +74,99 @@ public class MarketManager {
         return template.toMarket(state);
     }
 
-    /**
-     * @return true if a template file exists on disk for {@code key}
-     *         (not necessarily loaded into the cache)
-     */
+
     public boolean exists(Key key) {
         return Files.exists(templateFileFor(key));
     }
 
-
-    /**
-     * Drops the cached template for {@code key}. The next {@link #market(Key)} call
-     * will re-read the file. State is left alone.
-     *
-     * <p>Call this from your reload command after an admin edits a market file.
-     */
     public void invalidate(Key key) {
         templateCache.remove(key);
     }
 
     /**
-     * Drops every cached template. Use for a global reload.
+     * Drops every cached template
      */
     public void invalidateAll() {
         templateCache.clear();
     }
 
 
-    /**
-     * Asynchronously writes the given state to disk. Saves are serialised so
-     * calls cannot race each other.
-     */
     public void save(MarketState state) {
-        // Snapshot any data the executor needs *now*, on the calling thread.
-        // If MarketState had mutable collections you'd need a deep copy here.
         Key key = state.key();
         saveExecutor.execute(() -> writeState(key, state));
     }
 
-    /**
-     * Flushes pending saves and stops the executor. Call from plugin disable.
-     */
+
     public void shutdown() {
         saveExecutor.shutdown();
     }
 
-    /**
-     * Eagerly loads every template + state file. Optionalally, {@link #market(Key)} loads
-     * lazily on first access — but useful for catching JSON errors at startup.
-     */
-    public void loadAll() {
-        try {
-            Files.createDirectories(directory);
-        } catch (IOException e) {
-            LOGGER.error("Failed to create markets directory at " + directory, e);
-            return;
+
+    @SneakyThrows
+    public MarketTemplate create(Key key, Component title, int size, List<SlotEntry> staticSlots, SlotList contentSlots) {
+        Path file = templateFileFor(key);
+        if (Files.exists(file)) {
+            throw new IllegalStateException("Market already exists: " + key);
         }
 
-        try (Stream<Path> files = Files.list(directory)) {
-            Set<Key> seen = new HashSet<>();
-            files.filter(p -> {
-                String name = p.getFileName().toString();
-                // Templates only — state files load on demand alongside their template.
-                return name.endsWith(TEMPLATE_SUFFIX) && !name.endsWith(STATE_SUFFIX);
-            }).forEach(file -> {
-                Key key = keyFromTemplateFile(file);
-                if (key != null && seen.add(key)) {
-                    template(key);  // populates the cache
-                }
-            });
-        } catch (IOException e) {
-            LOGGER.error("Failed to list markets directory", e);
+        Files.createDirectories(directory);
+
+        MarketTemplate template = new MarketTemplate(key, title, size, contentSlots, staticSlots, Map.of());
+
+        Gson gson = GsonHolder.instance().get();
+        try (Writer writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
+            gson.toJson(template, MarketTemplate.class, writer);
         }
+
+        templateCache.put(key, template);
+        return template;
     }
+
+
+    @SneakyThrows
+    public MarketTemplate addItem(Key marketKey, MarketItem item) {
+        return addItem(marketKey, item, Integer.MAX_VALUE); // append
+    }
+
+    @SneakyThrows
+    public MarketTemplate addItem(Key marketKey, MarketItem item, int index) {
+        MarketTemplate current = template(marketKey);
+        if (current == null) {
+            throw new IllegalStateException("No market exists for key: " + marketKey);
+        }
+        if (current.items().containsKey(item.key())) {
+            throw new IllegalStateException("Item already exists in market: " + item.key());
+        }
+
+        // Rebuild the map with the new entry inserted at `index`.
+        Map<Key, MarketItem> updated = new LinkedHashMap<>(current.items().size() + 1);
+        int clamped = Math.max(0, Math.min(index, current.items().size()));
+        int i = 0;
+        boolean inserted = false;
+        for (Map.Entry<Key, MarketItem> entry : current.items().entrySet()) {
+            if (i == clamped && !inserted) {
+                updated.put(item.key(), item);
+                inserted = true;
+            }
+            updated.put(entry.getKey(), entry.getValue());
+            i++;
+        }
+        if (!inserted) {
+            updated.put(item.key(), item);
+        }
+
+        MarketTemplate next = new MarketTemplate(current.key(), current.title(), current.size(), current.contentSlots(), current.staticSlots(), updated);
+
+        Path file = templateFileFor(marketKey);
+        Gson gson = GsonHolder.instance().get();
+        try (Writer writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
+            gson.toJson(next, MarketTemplate.class, writer);
+        }
+
+        templateCache.put(marketKey, next);
+        return next;
+    }
+
 
     public Set<Key> keys() {
         Set<Key> keys = new HashSet<>();
@@ -168,7 +188,7 @@ public class MarketManager {
     }
 
 
-    private @Nullable MarketTemplate template(Key key) {
+    public @Nullable MarketTemplate template(Key key) {
         MarketTemplate cached = templateCache.get(key);
         if (cached != null) {
             return cached;
@@ -245,10 +265,10 @@ public class MarketManager {
     }
 
     private String safeName(Key key) {
-        // Slashes in namespaced keys would break the filename; flatten them.
         return key.asString().replace(':', '_').replace('/', '_');
     }
 
+    @SuppressWarnings("PatternValidation")
     private @Nullable Key keyFromTemplateFile(Path file) {
         String name = file.getFileName().toString();
         if (!name.endsWith(TEMPLATE_SUFFIX)) return null;

@@ -19,9 +19,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 // Credits: BreweryTeam/BreweryRecipes/RecipesGui.kt
 
@@ -31,6 +30,8 @@ import java.util.stream.IntStream;
 @SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public class Market implements ShopsInventory, Keyed {
 
+    private static final Locale LOCALE = Locale.getDefault();
+
     @Delegate
     private final MarketTemplate template;
     @Delegate
@@ -38,7 +39,6 @@ public class Market implements ShopsInventory, Keyed {
 
     @Accessors(fluent = false)
     private final Inventory inventory;
-    private final List<Integer> contentSlots; // computed: everything not claimed by static slots
     private final Map<Integer, MarketSlot> slotTypes = new HashMap<>();
     private final Map<Integer, MarketItem> slotItems = new HashMap<>();
 
@@ -48,27 +48,19 @@ public class Market implements ShopsInventory, Keyed {
         this.template = template;
         this.state = state;
         this.inventory = Bukkit.createInventory(this, template.size(), template.title());
-        this.contentSlots = this.computeContentSlots();
         this.render();
     }
 
-    private List<Integer> computeContentSlots() {
-        var claimed = template.staticSlots().stream().map(SlotEntry::slot).collect(Collectors.toSet());
-        return IntStream.range(0, template.size())
-                .filter(i -> !claimed.contains(i))
-                .boxed()
-                .toList();
-    }
-
-
     public int pageCapacity() {
-        return contentSlots.size();
+        return template.contentSlots().slots().size();
     }
 
     public int pageCount() {
-        List<MarketItem> items = template.items();
+        List<MarketItem> items = template.itemList();
         if (items.isEmpty()) return 1;
-        return (items.size() + pageCapacity() - 1) / pageCapacity();
+        int capacity = pageCapacity();
+        if (capacity == 0) return 1;
+        return (items.size() + capacity - 1) / capacity;
     }
 
     public boolean hasNextPage() {
@@ -91,7 +83,6 @@ public class Market implements ShopsInventory, Keyed {
         this.render();
     }
 
-
     public void render() {
         inventory.clear();
         slotTypes.clear();
@@ -100,20 +91,38 @@ public class Market implements ShopsInventory, Keyed {
         for (SlotEntry entry : template.staticSlots()) {
             if (entry.type() == MarketSlot.PREVIOUS_PAGE && !hasPreviousPage()) continue;
             if (entry.type() == MarketSlot.NEXT_PAGE && !hasNextPage()) continue;
-            inventory.setItem(entry.slot(), entry.stack());
+            inventory.setItem(entry.slot(), entry.displayStack());
             slotTypes.put(entry.slot(), entry.type());
         }
 
-        List<MarketItem> items = template.items();
-        int start = page * pageCapacity();
-        int end = Math.min(start + pageCapacity(), items.size());
+        List<MarketItem> items = template.itemList();
+        List<Integer> contentSlots = template.contentSlots().slots();
+        int capacity = contentSlots.size();
+        if (capacity == 0) return;
+
+        int start = page * capacity;
+        int end = Math.min(start + capacity, items.size());
         for (int i = start; i < end; i++) {
             int slot = contentSlots.get(i - start);
             MarketItem item = items.get(i);
-            inventory.setItem(slot, item.stack());
+            inventory.setItem(slot, item.display(state, LOCALE));
             slotTypes.put(slot, MarketSlot.CONTENT);
             slotItems.put(slot, item);
         }
+    }
+
+    public void refreshSlot(int slot) {
+        MarketItem item = slotItems.get(slot);
+        if (item == null) return;
+        inventory.setItem(slot, item.display(state, LOCALE));
+    }
+
+    public void refreshItem(MarketItem item) {
+        slotItems.forEach((slot, slotItem) -> {
+            if (slotItem == item) {
+                inventory.setItem(slot, item.display(state, LOCALE));
+            }
+        });
     }
 
     public MarketSlot typeAt(int slot) {
@@ -125,9 +134,8 @@ public class Market implements ShopsInventory, Keyed {
         return slotItems.get(slot);
     }
 
-
     public void prePurchase(MarketItem marketItem, Player player) {
-        ConfirmationDialog dialog = new ConfirmationDialog(this, marketItem);
+        ConfirmationDialog dialog = new ConfirmationDialog(player, this, marketItem);
         dialog.show(player);
     }
 

@@ -1,32 +1,25 @@
 package dev.lumas.shops.components.data;
 
+import io.papermc.paper.dialog.DialogResponseView;
 import net.kyori.adventure.key.Key;
-import net.kyori.adventure.key.KeyPattern;
 import net.kyori.adventure.key.Keyed;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
-
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 @NullMarked
-public record KeyConsumer<T>(Key key, @Nullable T parent, BiConsumer<@Nullable T, Player> consumer) implements Keyed {
+@SuppressWarnings("UnstableApiUsage")
+public record KeyConsumer<T>(T parent, Key key, Handler<T> consumer) implements Keyed {
 
-    public static <T> KeyConsumer<T> of(Key key, BiConsumer<T, Player> consumer) {
-        return new KeyConsumer<>(key, null, consumer);
+    @FunctionalInterface
+    public interface Handler<T> {
+        void handle(T parent, Player player, DialogResponseView view);
     }
 
-    public static KeyConsumer<Void> of(Key key, Runnable runnable) {
-        return new KeyConsumer<>(key, null, (_, _) -> runnable.run());
+    public static <T> KeyConsumer<T> of(T parent, Key key, Handler<T> consumer) {
+        return new KeyConsumer<>(parent, key, consumer);
     }
 
-    public KeyConsumer<T> withParent(T parent) {
-        return new KeyConsumer<>(key, parent, consumer);
+    public void call(Player player, DialogResponseView view) {
+        consumer.handle(parent, player, view);
     }
-
-    public void call(Player player) {
-        consumer.accept(parent, player);
-    }
-
 }

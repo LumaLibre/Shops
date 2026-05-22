@@ -14,12 +14,15 @@ import dev.lumas.shops.annotations.Singleton;
 import dev.lumas.shops.components.backing.factories.EnumTypeCodecFactory;
 import dev.lumas.shops.interfaces.Accessor;
 import dev.lumas.shops.interfaces.Codec;
+import org.jspecify.annotations.NullMarked;
 
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+@NullMarked
 @Register(Autowire.SERVICE)
 public final class GsonHolder implements Service, Accessor<Gson> {
 
@@ -53,12 +56,20 @@ public final class GsonHolder implements Service, Accessor<Gson> {
         GsonBuilder builder = new GsonBuilder();
 
         for (Map.Entry<TypeToken<?>, Object> entry : resolvedAdapters.entrySet()) {
-            builder.registerTypeAdapter(entry.getKey().getType(), entry.getValue());
+            Type type = entry.getKey().getType();
+            if (type instanceof Class<?> raw) {
+                builder.registerTypeHierarchyAdapter(raw, entry.getValue());
+            } else {
+                builder.registerTypeAdapter(type, entry.getValue());
+            }
         }
 
         builder.registerTypeAdapterFactory(new EnumTypeCodecFactory());
 
-        this.gson = builder.setPrettyPrinting().create();
+        this.gson = builder.setPrettyPrinting()
+                .disableHtmlEscaping()
+                .enableComplexMapKeySerialization()
+                .create();
     }
 
     @Override
