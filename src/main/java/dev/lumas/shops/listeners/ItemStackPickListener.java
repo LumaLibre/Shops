@@ -30,11 +30,11 @@ public class ItemStackPickListener implements Listener {
 
     public static final ItemStackPickListener INSTANCE = new ItemStackPickListener();
 
-    private static final int TIMEOUT_TICKS = 300;          // 15 seconds
-    private static final int TITLE_INTERVAL_TICKS = 20;        // 1 second
+    private static final int TIMEOUT_TICKS = 300; // 15 seconds
+    private static final int TITLE_INTERVAL_TICKS = 20; // 1 second
     private static final Title.Times TITLE_TIMES = Title.Times.times(
             Duration.ZERO,
-            Duration.ofSeconds(2),  // longer than the interval so titles don't flicker
+            Duration.ofSeconds(2), // longer than the interval so titles don't flicker
             Duration.ZERO
     );
 

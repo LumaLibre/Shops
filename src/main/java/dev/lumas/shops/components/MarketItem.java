@@ -7,7 +7,6 @@ import dev.lumas.shops.config.TranslatorService;
 import dev.lumas.shops.constants.PurchaseResult;
 import dev.lumas.shops.interfaces.Currency;
 import dev.lumas.shops.interfaces.Product;
-import dev.lumas.shops.util.Lazy;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -20,7 +19,6 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.translation.GlobalTranslator;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;

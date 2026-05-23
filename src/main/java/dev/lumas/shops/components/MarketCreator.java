@@ -3,6 +3,7 @@ package dev.lumas.shops.components;
 import dev.lumas.shops.Shops;
 import dev.lumas.shops.components.data.SlotEntry;
 import dev.lumas.shops.components.data.SlotList;
+import dev.lumas.shops.components.templates.MarketTemplate;
 import dev.lumas.shops.constants.MarketSlot;
 import dev.lumas.shops.interfaces.Meta;
 import dev.lumas.shops.interfaces.ShopsInventory;
@@ -26,8 +27,10 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @Getter
@@ -41,23 +44,33 @@ public class MarketCreator implements ShopsInventory {
         meta.setHideTooltip(true);
     });
 
-    private final Key newMarketKey;
-    private final Component newMarketTitle;
-    private final int newMarketSize;
-    private final SlotList newMarketContentSlots;
+    private final Key key;
+    private final Component title;
+    private final int size;
+    private final SlotList contentSlots;
+
+    @Nullable
+    private final MarketTemplate oldTemplate;
 
     @Accessors(fluent = false)
     private final Inventory inventory;
 
-    public MarketCreator(Key newMarketKey, Component newMarketTitle, int newMarketSize, SlotList newMarketContentSlots) {
-        this.newMarketKey = newMarketKey;
-        this.newMarketTitle = newMarketTitle;
-        this.newMarketSize = newMarketSize;
-        this.newMarketContentSlots = newMarketContentSlots;
-        this.inventory = Bukkit.createInventory(this, newMarketSize, newMarketTitle);
+    public MarketCreator(Key key, Component title, int size, SlotList contentSlots, @Nullable MarketTemplate oldTemplate) {
+        this.key = key;
+        this.title = title;
+        this.size = size;
+        this.contentSlots = contentSlots;
+        this.oldTemplate = oldTemplate;
+        this.inventory = Bukkit.createInventory(this, size, title);
 
-        for (Integer slot : newMarketContentSlots.slots()) {
+        for (Integer slot : contentSlots.slots()) {
             inventory.setItem(slot, CONTENT_SLOT_BLOCKER);
+        }
+
+        if (oldTemplate != null) {
+            for (SlotEntry entry : oldTemplate.staticSlots()) {
+                inventory.setItem(entry.slot(), entry.stack());
+            }
         }
     }
 
@@ -72,20 +85,48 @@ public class MarketCreator implements ShopsInventory {
     public void handleClose(InventoryCloseEvent event) {
         Player player = (Player) event.getPlayer();
         Locale locale = player.locale();
+        List<SlotEntry> staticSlots = getStaticSlots(locale);
+
+        if (oldTemplate == null) {
+            MarketManager.INSTANCE.create(key, title, size, staticSlots, contentSlots);
+            player.sendMessage(Component.translatable("shops.messages.create.success", Component.text(key.asString())));
+        } else {
+            MarketManager.INSTANCE.edit(key, title, size, staticSlots, contentSlots);
+            player.sendMessage(Component.translatable("shops.messages.edit.success", Component.text(key.asString())));
+        }
+    }
+
+    protected List<SlotEntry> getStaticSlots(Locale locale) {
+        // Snapshot old non-BORDER types by their original slot. Used to short-circuit
+        // name-based detection when the player left a special slot untouched.
+        Map<Integer, SlotEntry> previousByslot = new HashMap<>();
+        if (oldTemplate != null) {
+            for (SlotEntry entry : oldTemplate.staticSlots()) {
+                if (entry.type() != MarketSlot.BORDER) {
+                    previousByslot.put(entry.slot(), entry);
+                }
+            }
+        }
+
         List<SlotEntry> staticSlots = new ArrayList<>();
         for (int i = 0; i < inventory.getSize(); i++) {
             ItemStack itemStack = inventory.getItem(i);
-            if (itemStack != null && !isContentSlot(itemStack)) {
-                MarketSlot slot = determineSlotType(itemStack, locale);
-                staticSlots.add(new SlotEntry(i, slot, itemStack));
+            if (itemStack == null || isContentSlot(itemStack)) continue;
+
+            MarketSlot slot;
+            SlotEntry previous = previousByslot.get(i);
+            if (previous != null && previous.stack().isSimilar(itemStack)) {
+                // Unchanged from before, keep the original type.
+                slot = previous.type();
+            } else {
+                slot = determineSlotType(itemStack, locale);
             }
+            staticSlots.add(new SlotEntry(i, slot, itemStack));
         }
-        MarketManager.INSTANCE.create(newMarketKey, newMarketTitle, newMarketSize, staticSlots, newMarketContentSlots);
-        player.sendMessage(Component.translatable("shops.create.success", Component.text(newMarketKey.asString())));
+        return staticSlots;
     }
 
     private MarketSlot determineSlotType(ItemStack itemStack, Locale locale) {
-
         ItemMeta meta = itemStack.getItemMeta();
         if (meta == null || !meta.hasCustomName()) {
             return MarketSlot.BORDER;
@@ -95,13 +136,13 @@ public class MarketCreator implements ShopsInventory {
 
         Pattern previous = pattern(GlobalTranslator.render(Component.translatable("shops.market.creator.previous"), locale));
         Pattern next = pattern(GlobalTranslator.render(Component.translatable("shops.market.creator.next"), locale));
-        Pattern back = pattern(GlobalTranslator.render(Component.translatable("shops.market.creator.close"), locale));
+        Pattern close = pattern(GlobalTranslator.render(Component.translatable("shops.market.creator.close"), locale));
 
-        if (previous.matcher(name).matches()) {
+        if (previous.matcher(name).find()) {
             return MarketSlot.PREVIOUS_PAGE;
-        } else if (next.matcher(name).matches()) {
+        } else if (next.matcher(name).find()) {
             return MarketSlot.NEXT_PAGE;
-        } else if (back.matcher(name).matches()) {
+        } else if (close.matcher(name).find()) {
             return MarketSlot.CLOSE;
         } else {
             return MarketSlot.BORDER;

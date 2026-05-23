@@ -12,6 +12,7 @@ public record ShopItemProductImpl() implements Product {
 
     @Override
     public void give(Player player, MarketItem marketItem, int amount) {
+        // FIXME: Exception when amount > than max stack size
         player.give(marketItem.stack().asQuantity(amount));
     }
 

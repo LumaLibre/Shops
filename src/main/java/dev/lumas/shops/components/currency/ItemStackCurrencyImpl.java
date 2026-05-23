@@ -4,14 +4,12 @@ import dev.lumas.shops.constants.suppliers.Currencies;
 import dev.lumas.shops.interfaces.Currency;
 import dev.lumas.shops.util.ClassUtil;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 import java.util.Map;
 
-// TODO: Implement
 public record ItemStackCurrencyImpl(ItemStackAmount amount) implements Currency<Integer> {
 
     @Override

@@ -21,6 +21,7 @@ public record LumaItemProductImpl(String key) implements Product, EnumType<Produ
         CustomItem customItem = LumaItemsAPI.getInstance().getCustomItem(key);
         Preconditions.checkNotNull(customItem, "Custom item with key " + key + " does not exist");
 
+        // FIXME: Exception when amount > than max stack size
         player.give(customItem.createItem().getSecond().asQuantity(amount));
     }
 

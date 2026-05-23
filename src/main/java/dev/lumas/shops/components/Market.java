@@ -89,8 +89,8 @@ public class Market implements ShopsInventory, Keyed {
         slotItems.clear();
 
         for (SlotEntry entry : template.staticSlots()) {
-            if (entry.type() == MarketSlot.PREVIOUS_PAGE && !hasPreviousPage()) continue;
-            if (entry.type() == MarketSlot.NEXT_PAGE && !hasNextPage()) continue;
+//            if (entry.type() == MarketSlot.PREVIOUS_PAGE && !hasPreviousPage()) continue;
+//            if (entry.type() == MarketSlot.NEXT_PAGE && !hasNextPage()) continue;
             inventory.setItem(entry.slot(), entry.displayStack());
             slotTypes.put(entry.slot(), entry.type());
         }
@@ -140,10 +140,10 @@ public class Market implements ShopsInventory, Keyed {
     }
 
     public void handleClick(InventoryClickEvent event) {
+        event.setCancelled(true);
         int slot = event.getRawSlot();
         MarketSlot type = typeAt(slot);
         Player player = (Player) event.getWhoClicked();
-        event.setCancelled(true);
 
         switch (type) {
             case CONTENT -> {

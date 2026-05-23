@@ -2,13 +2,11 @@ package dev.lumas.shops.components.templates;
 
 import dev.lumas.shops.components.MarketManager;
 import dev.lumas.shops.components.data.PurchaseReceipt;
-import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.Keyed;
 import org.jspecify.annotations.NullMarked;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 

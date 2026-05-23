@@ -12,16 +12,13 @@ import net.kyori.adventure.translation.GlobalTranslator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
-import java.io.StringWriter;
-import java.io.Writer;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -31,18 +28,21 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
 
 /**
- * Loads .lang.properties files, merges JAR defaults with user-edited copies on disk,
+ * Loads .lang.properties files, syncs JAR defaults with user-edited copies on disk,
  * and serves translations to Adventure's GlobalTranslator.
  *
  * Files are named "<language-tag>.lang.properties", e.g. "en-US.lang.properties".
@@ -91,14 +91,13 @@ public class TranslatorService extends MiniMessageTranslator implements Service 
 
     /**
      * For each .lang.properties bundled in the JAR's /locale/ folder:
-     *  - if the user has no copy on disk, copy it out
-     *  - if they do, merge: user values win, missing keys filled from JAR
-     * Result is written back to disk so users see new keys after updates.
+     *  - if the user has no copy on disk, copy it out verbatim.
+     *  - if they do, sync key sets without rewriting unchanged lines.
      */
     private void syncLangFiles() {
         if (!localeDirectory.exists() && !localeDirectory.mkdirs()) {
             throw new IllegalStateException(
-                "Failed to create locale directory: " + localeDirectory.getAbsolutePath());
+                    "Failed to create locale directory: " + localeDirectory.getAbsolutePath());
         }
 
         try {
@@ -119,7 +118,7 @@ public class TranslatorService extends MiniMessageTranslator implements Service 
                     try (DirectoryStream<Path> stream =
                                  Files.newDirectoryStream(internalDir, "*" + LANG_SUFFIX)) {
                         for (Path path : stream) {
-                            mergeAndStore(path);
+                            syncOne(path);
                         }
                     }
                 }
@@ -129,58 +128,182 @@ public class TranslatorService extends MiniMessageTranslator implements Service 
         }
     }
 
-    private void mergeAndStore(Path internalFile) throws IOException {
+    /**
+     * Sync a single bundled file with its external counterpart.
+     *
+     * <p>If no external file exists, the bundled file is copied verbatim. Otherwise,
+     * the diff between JAR keys and user keys is applied as a line-level edit:
+     *
+     * <ul>
+     *   <li>Lines belonging to orphan keys (in user, not in JAR) are dropped.</li>
+     *   <li>Lines for new keys (in JAR, not in user) are appended at the bottom,
+     *       using the JAR's raw line text so escaping is preserved.</li>
+     * </ul>
+     *
+     * If the diff is empty, the file is not touched at all.
+     */
+    private void syncOne(Path internalFile) throws IOException {
         String fileName = internalFile.getFileName().toString();
-        File externalFile = new File(localeDirectory, fileName);
+        Path externalFile = localeDirectory.toPath().resolve(fileName);
 
-        Properties internalProps = new Properties();
-        try (Reader reader = Files.newBufferedReader(internalFile, StandardCharsets.UTF_8)) {
-            internalProps.load(reader);
+        if (!Files.exists(externalFile)) {
+            Files.copy(internalFile, externalFile, StandardCopyOption.COPY_ATTRIBUTES);
+            return;
         }
 
-        Properties merged = new Properties();
-        if (externalFile.exists()) {
-            Properties externalProps = new Properties();
-            try (Reader reader = new InputStreamReader(
-                    new FileInputStream(externalFile), StandardCharsets.UTF_8)) {
-                externalProps.load(reader);
+        Properties jarProps = loadProps(internalFile);
+        Properties userProps = loadProps(externalFile);
+
+        Set<String> jarKeys = jarProps.stringPropertyNames();
+        Set<String> userKeys = userProps.stringPropertyNames();
+
+        Set<String> toAdd = new HashSet<>(jarKeys);
+        toAdd.removeAll(userKeys);
+
+        Set<String> toRemove = new HashSet<>(userKeys);
+        toRemove.removeAll(jarKeys);
+
+        if (toAdd.isEmpty() && toRemove.isEmpty()) {
+            return;
+        }
+
+        // Read both files as raw lines so we can preserve user formatting and
+        // pull verbatim text for new keys from the JAR.
+        List<String> userLines = Files.readAllLines(externalFile, StandardCharsets.UTF_8);
+        List<String> jarLines = Files.readAllLines(internalFile, StandardCharsets.UTF_8);
+
+        List<String> output = new ArrayList<>(userLines.size() + toAdd.size());
+
+        // Walk the user file, dropping logical-line groups whose key is in toRemove.
+        // A logical line may span multiple physical lines via trailing backslash continuation.
+        int i = 0;
+        while (i < userLines.size()) {
+            int start = i;
+            while (i < userLines.size() && endsWithContinuation(userLines.get(i))) {
+                i++;
             }
-            // user's values take precedence; only fill in missing keys from JAR
-            merged.putAll(externalProps);
-            for (String key : internalProps.stringPropertyNames()) {
-                merged.putIfAbsent(key, internalProps.getProperty(key));
+            if (i < userLines.size()) i++;
+
+            List<String> group = userLines.subList(start, i);
+            String key = extractKey(group);
+            if (key != null && toRemove.contains(key)) {
+                continue;
             }
-        } else {
-            merged.putAll(internalProps);
-            if (!externalFile.createNewFile()) {
-                throw new IOException("Could not create file: " + externalFile);
+            output.addAll(group);
+        }
+
+        // Append new keys from JAR, pulling raw line groups verbatim.
+        if (!toAdd.isEmpty()) {
+            if (!output.isEmpty() && !output.getLast().isEmpty()) {
+                output.add("");
+            }
+            output.add("# Added by Shops " + Shops.instance().getPluginMeta().getVersion() + ". review and customize these new keys.");
+
+            int j = 0;
+            while (j < jarLines.size()) {
+                int gStart = j;
+                while (j < jarLines.size() && endsWithContinuation(jarLines.get(j))) {
+                    j++;
+                }
+                if (j < jarLines.size()) j++;
+
+                List<String> group = jarLines.subList(gStart, j);
+                String key = extractKey(group);
+                if (key != null && toAdd.contains(key)) {
+                    output.addAll(group);
+                }
             }
         }
 
-        try (Writer writer = new OutputStreamWriter(
-                new FileOutputStream(externalFile), StandardCharsets.UTF_8)) {
-            writeSorted(merged, writer);
-        }
-    }
-
-    /** Properties.store() adds a timestamp comment we don't want; write our own. */
-    private void writeSorted(Properties props, Writer writer) throws IOException {
-        List<String> keys = new ArrayList<>(props.stringPropertyNames());
-        Collections.sort(keys);
-        for (String key : keys) {
-            Properties single = new Properties();
-            single.setProperty(key, props.getProperty(key));
-            // store to a buffer, strip the timestamp line, write the rest
-            StringWriter buf = new StringWriter();
-            single.store(buf, null);
-            String[] lines = buf.toString().split("\n", -1);
-            for (String line : lines) {
-                if (line.startsWith("#")) continue; // strip timestamp comment
-                if (line.isEmpty()) continue;
+        // Write atomically so a crash mid-write doesn't corrupt the user's file.
+        Path tmp = externalFile.resolveSibling(fileName + ".tmp");
+        try (BufferedWriter writer = Files.newBufferedWriter(tmp, StandardCharsets.UTF_8)) {
+            for (String line : output) {
                 writer.write(line);
                 writer.write('\n');
             }
         }
+        Files.move(tmp, externalFile,
+                StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+
+        LOGGER.info("Synced " + fileName + ": +" + toAdd.size() + " key(s), -" + toRemove.size() + " key(s)");
+    }
+
+    private static Properties loadProps(Path file) throws IOException {
+        Properties props = new Properties();
+        try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+            props.load(reader);
+        }
+        return props;
+    }
+
+    /**
+     * @return the key declared on the first non-blank, non-comment line of the group, or null
+     */
+    private static @Nullable String extractKey(List<String> group) {
+        if (group.isEmpty()) return null;
+        String head = group.get(0);
+        String trimmed = head.stripLeading();
+        if (trimmed.isEmpty()) return null;
+        char c = trimmed.charAt(0);
+        if (c == '#' || c == '!') return null;
+
+        StringBuilder key = new StringBuilder();
+        boolean escaped = false;
+        for (int i = 0; i < trimmed.length(); i++) {
+            char ch = trimmed.charAt(i);
+            if (escaped) {
+                key.append(ch);
+                escaped = false;
+                continue;
+            }
+            if (ch == '\\') {
+                escaped = true;
+                continue;
+            }
+            if (ch == '=' || ch == ':' || Character.isWhitespace(ch)) break;
+            key.append(ch);
+        }
+        return decodeKeyEscapes(key.toString());
+    }
+
+    private static String decodeKeyEscapes(String s) {
+        StringBuilder out = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '\\' && i + 1 < s.length()) {
+                char next = s.charAt(++i);
+                switch (next) {
+                    case 'n' -> out.append('\n');
+                    case 'r' -> out.append('\r');
+                    case 't' -> out.append('\t');
+                    case 'u' -> {
+                        if (i + 4 < s.length()) {
+                            try {
+                                out.append((char) Integer.parseInt(s.substring(i + 1, i + 5), 16));
+                                i += 4;
+                            } catch (NumberFormatException ignored) {
+                                out.append(next);
+                            }
+                        } else {
+                            out.append(next);
+                        }
+                    }
+                    default -> out.append(next);
+                }
+            } else {
+                out.append(c);
+            }
+        }
+        return out.toString();
+    }
+
+    private static boolean endsWithContinuation(String line) {
+        int trailingBackslashes = 0;
+        for (int i = line.length() - 1; i >= 0 && line.charAt(i) == '\\'; i--) {
+            trailingBackslashes++;
+        }
+        return trailingBackslashes % 2 == 1;
     }
 
 
@@ -212,7 +335,7 @@ public class TranslatorService extends MiniMessageTranslator implements Service 
 
         if (!translations.containsKey(defaultLocale)) {
             throw new IllegalStateException(
-                "Default locale " + defaultLocale.toLanguageTag() + " not found in lang files");
+                    "Default locale " + defaultLocale.toLanguageTag() + " not found in lang files");
         }
     }
 
@@ -230,7 +353,7 @@ public class TranslatorService extends MiniMessageTranslator implements Service 
         if (clientSideTranslations) {
             // try exact locale first (e.g. en-US)
             props = translations.get(locale);
-            // then language only (e.g. en) — graceful fallback for en-GB → en
+            // then language only (e.g. en) \u2014 graceful fallback for en-GB \u2192 en
             if (props == null || !props.containsKey(key)) {
                 Properties langOnly = translations.get(Locale.forLanguageTag(locale.getLanguage()));
                 if (langOnly != null && langOnly.containsKey(key)) {

@@ -16,7 +16,7 @@ public class DialogListener implements Listener {
 
     @EventHandler
     public void onHandleCustomClick(PlayerCustomClickEvent event) {
-        PlayerGameConnection connection = (PlayerGameConnection) event.getCommonConnection();
+        if (!(event.getCommonConnection() instanceof PlayerGameConnection connection)) return;
         DialogResponseView view = Preconditions.checkNotNull(event.getDialogResponseView(), "DialogResponseView is null");
         KeyConsumerRegistry.INSTANCE.dispatch(connection.getPlayer(), event.getIdentifier(), view);
     }

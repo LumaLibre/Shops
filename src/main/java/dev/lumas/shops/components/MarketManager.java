@@ -33,13 +33,11 @@ import java.util.stream.Stream;
 /**
  * Owns market templates and shared state. Builds a fresh {@link Market} for each player.
  *
- * <p><b>Templates</b> ({@code markets/<key>.json}) are immutable definitions edited
- * externally. Cached in memory; the cache is cleared by {@link #invalidate(Key)}
- * or {@link #invalidateAll()}, which an admin command should call after editing.
+ * <p><b>Templates</b> ({@code markets/<key>.json}) are immutable definitions.
+ * Cached; invalidate via {@link #invalidate(Key)} / {@link #invalidateAll()}.
  *
- * <p><b>State</b> ({@code markets/<key>.state.json}) holds mutable bits like stock
- * counts and sales totals. Shared across players viewing the same market.
- * Save with {@link #save(MarketState)} after mutating.
+ * <p><b>State</b> ({@code markets/<key>.state.json}) holds mutable stock and sales.
+ * Shared across viewers of the same market. Save with {@link #save(MarketState)}.
  */
 @NullMarked
 public class MarketManager {
@@ -54,10 +52,7 @@ public class MarketManager {
     private final Map<Key, MarketTemplate> templateCache = new HashMap<>();
     private final Map<Key, MarketState> stateCache = new HashMap<>();
 
-    /**
-     * Single-thread executor so state saves run off the main thread but never race
-     * each other. The plugin should call {@link #shutdown()} on disable to drain it.
-     */
+    /** Single-thread executor so state saves run off-main but never race each other. */
     private final ExecutorService saveExecutor = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "shops-state-saver");
         t.setDaemon(true);
@@ -67,13 +62,9 @@ public class MarketManager {
 
     public @Nullable Market market(Key key) {
         MarketTemplate template = template(key);
-        if (template == null) {
-            return null;
-        }
-        MarketState state = state(key);
-        return template.toMarket(state);
+        if (template == null) return null;
+        return template.toMarket(state(key));
     }
-
 
     public boolean exists(Key key) {
         return Files.exists(templateFileFor(key));
@@ -83,19 +74,14 @@ public class MarketManager {
         templateCache.remove(key);
     }
 
-    /**
-     * Drops every cached template
-     */
     public void invalidateAll() {
         templateCache.clear();
     }
-
 
     public void save(MarketState state) {
         Key key = state.key();
         saveExecutor.execute(() -> writeState(key, state));
     }
-
 
     public void shutdown() {
         saveExecutor.shutdown();
@@ -104,41 +90,51 @@ public class MarketManager {
 
     @SneakyThrows
     public MarketTemplate create(Key key, Component title, int size, List<SlotEntry> staticSlots, SlotList contentSlots) {
-        Path file = templateFileFor(key);
-        if (Files.exists(file)) {
+        if (exists(key)) {
             throw new IllegalStateException("Market already exists: " + key);
         }
-
-        Files.createDirectories(directory);
-
-        MarketTemplate template = new MarketTemplate(key, title, size, contentSlots, staticSlots, Map.of());
-
-        Gson gson = GsonHolder.instance().get();
-        try (Writer writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
-            gson.toJson(template, MarketTemplate.class, writer);
-        }
-
-        templateCache.put(key, template);
-        return template;
+        return writeAndCache(new MarketTemplate(key, title, size, contentSlots, staticSlots, Map.of()));
     }
 
-
+    /**
+     * Edits an existing market template. Null arguments keep the current value.
+     *
+     * @throws IllegalStateException if no template exists for {@code key}
+     */
     @SneakyThrows
-    public MarketTemplate addItem(Key marketKey, MarketItem item) {
-        return addItem(marketKey, item, Integer.MAX_VALUE); // append
+    public MarketTemplate edit(Key key,
+                               @Nullable Component title,
+                               @Nullable Integer size,
+                               @Nullable List<SlotEntry> staticSlots,
+                               @Nullable SlotList contentSlots) {
+        MarketTemplate current = requireTemplate(key);
+        return writeAndCache(new MarketTemplate(
+                current.key(),
+                title != null ? title : current.title(),
+                size != null ? size : current.size(),
+                contentSlots != null ? contentSlots : current.contentSlots(),
+                staticSlots != null ? staticSlots : current.staticSlots(),
+                current.items()
+        ));
     }
 
+    /** Appends {@code item} to the end of the market's item list. */
+    public MarketTemplate addItem(Key marketKey, MarketItem item) {
+        return addItem(marketKey, item, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Inserts {@code item} at the given position. {@code index} is clamped to {@code [0, size]}.
+     *
+     * @throws IllegalStateException if the market is missing or the item key is already present
+     */
     @SneakyThrows
     public MarketTemplate addItem(Key marketKey, MarketItem item, int index) {
-        MarketTemplate current = template(marketKey);
-        if (current == null) {
-            throw new IllegalStateException("No market exists for key: " + marketKey);
-        }
+        MarketTemplate current = requireTemplate(marketKey);
         if (current.items().containsKey(item.key())) {
             throw new IllegalStateException("Item already exists in market: " + item.key());
         }
 
-        // Rebuild the map with the new entry inserted at `index`.
         Map<Key, MarketItem> updated = new LinkedHashMap<>(current.items().size() + 1);
         int clamped = Math.max(0, Math.min(index, current.items().size()));
         int i = 0;
@@ -151,28 +147,34 @@ public class MarketManager {
             updated.put(entry.getKey(), entry.getValue());
             i++;
         }
-        if (!inserted) {
-            updated.put(item.key(), item);
+        if (!inserted) updated.put(item.key(), item);
+
+        return writeAndCache(withItems(current, updated));
+    }
+
+    /**
+     * Removes the item with {@code itemKey} from the market.
+     *
+     * @throws IllegalStateException if the market is missing or the item is not present
+     */
+    @SneakyThrows
+    public MarketTemplate removeItem(Key marketKey, Key itemKey) {
+        MarketTemplate current = requireTemplate(marketKey);
+        if (!current.items().containsKey(itemKey)) {
+            throw new IllegalStateException("Item does not exist in market: " + itemKey);
         }
 
-        MarketTemplate next = new MarketTemplate(current.key(), current.title(), current.size(), current.contentSlots(), current.staticSlots(), updated);
+        Map<Key, MarketItem> updated = new LinkedHashMap<>(current.items());
+        updated.remove(itemKey);
 
-        Path file = templateFileFor(marketKey);
-        Gson gson = GsonHolder.instance().get();
-        try (Writer writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
-            gson.toJson(next, MarketTemplate.class, writer);
-        }
-
-        templateCache.put(marketKey, next);
-        return next;
+        return writeAndCache(withItems(current, updated));
     }
 
 
     public Set<Key> keys() {
         Set<Key> keys = new HashSet<>();
-        if (!Files.isDirectory(directory)) {
-            return keys;
-        }
+        if (!Files.isDirectory(directory)) return keys;
+
         try (Stream<Path> files = Files.list(directory)) {
             files.filter(p -> {
                 String name = p.getFileName().toString();
@@ -187,17 +189,12 @@ public class MarketManager {
         return keys;
     }
 
-
     public @Nullable MarketTemplate template(Key key) {
         MarketTemplate cached = templateCache.get(key);
-        if (cached != null) {
-            return cached;
-        }
+        if (cached != null) return cached;
 
         Path file = templateFileFor(key);
-        if (!Files.exists(file)) {
-            return null;
-        }
+        if (!Files.exists(file)) return null;
 
         Gson gson = GsonHolder.instance().get();
         try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
@@ -214,11 +211,34 @@ public class MarketManager {
         }
     }
 
+
+    private MarketTemplate requireTemplate(Key key) {
+        MarketTemplate current = template(key);
+        if (current == null) {
+            throw new IllegalStateException("No market exists for key: " + key);
+        }
+        return current;
+    }
+
+    private static MarketTemplate withItems(MarketTemplate base, Map<Key, MarketItem> items) {
+        return new MarketTemplate(base.key(), base.title(), base.size(), base.contentSlots(), base.staticSlots(), items);
+    }
+
+    @SneakyThrows
+    private MarketTemplate writeAndCache(MarketTemplate template) {
+        Files.createDirectories(directory);
+        Path file = templateFileFor(template.key());
+        Gson gson = GsonHolder.instance().get();
+        try (Writer writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
+            gson.toJson(template, MarketTemplate.class, writer);
+        }
+        templateCache.put(template.key(), template);
+        return template;
+    }
+
     private MarketState state(Key key) {
         MarketState cached = stateCache.get(key);
-        if (cached != null) {
-            return cached;
-        }
+        if (cached != null) return cached;
 
         Path file = stateFileFor(key);
         MarketState loaded;
@@ -234,7 +254,6 @@ public class MarketManager {
         } else {
             loaded = new MarketState(key);
         }
-
         stateCache.put(key, loaded);
         return loaded;
     }

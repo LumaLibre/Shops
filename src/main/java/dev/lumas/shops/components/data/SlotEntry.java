@@ -33,9 +33,13 @@ public class SlotEntry {
     public ItemStack displayStack() {
         // Can't use lazy here because of Gson's unsafe allocation weirdness
         if (displayStack == null) {
-            displayStack = Meta.edit(stack.clone(), meta -> {
-                meta.setHideTooltip(true);
-            });
+            if (type == MarketSlot.BORDER) {
+                displayStack = Meta.edit(stack.clone(), meta -> {
+                    meta.setHideTooltip(true);
+                });
+            } else {
+                displayStack = stack.clone();
+            }
         }
 
         return displayStack;

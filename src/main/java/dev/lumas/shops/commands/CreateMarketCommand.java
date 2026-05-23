@@ -20,18 +20,9 @@ import java.util.List;
 public class CreateMarketCommand implements SubCommand {
 
     @Override
-    @SuppressWarnings("PatternValidation")
     public boolean execute(Shops plugin, CommandSender sender, String label, String[] args) {
         Player player = (Player) sender;
-        String name = args[0];
-
-        Key key;
-
-        if (name.contains(":")){
-            key = Key.key(name);
-        } else {
-            key = Key.key("shops:" + name);
-        }
+        Key key = key(args[0]);
 
         CreateMarketDialog dialog = new CreateMarketDialog(player.locale(), key);
         dialog.show(player);
