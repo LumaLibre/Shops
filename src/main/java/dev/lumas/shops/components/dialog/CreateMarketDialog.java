@@ -8,6 +8,7 @@ import dev.lumas.shops.components.data.SlotList;
 import dev.lumas.shops.components.templates.MarketTemplate;
 import dev.lumas.shops.interfaces.ShopsDialog;
 import dev.lumas.shops.util.Numbers;
+import dev.lumas.shops.util.Viewers;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.registry.data.dialog.ActionButton;
@@ -47,7 +48,7 @@ public class CreateMarketDialog extends ShopsDialog {
     );
 
     private final Key marketKey;
-    private @Nullable MarketTemplate oldTemplate;
+    private @Nullable MarketTemplate template;
 
     public CreateMarketDialog(Locale locale, Key marketKey) {
         super(locale);
@@ -59,12 +60,12 @@ public class CreateMarketDialog extends ShopsDialog {
         DialogInput nameInput = DialogInput.text(INPUT_NAME, translate("shops.create.input.name"))
                 .maxLength(Integer.MAX_VALUE)
                 .width(300)
-                .initial(orEmpty(oldTemplate == null ? null : oldTemplate.title())) // i want to avoid npe
+                .initial(orEmpty(template == null ? null : template.title()))
                 .build();
 
         DialogInput sizeInput = DialogInput.numberRange(INPUT_SIZE, translate("shops.create.input.size"), 9f, 54f)
                 .step(9f)
-                .initial(oldTemplate == null ? 27f : oldTemplate.size())
+                .initial(template == null ? 27f : template.size())
                 .labelFormat("%s: %s slots")
                 .width(300)
                 .build();
@@ -72,7 +73,7 @@ public class CreateMarketDialog extends ShopsDialog {
         // e.g. "10-16, 19, 22-24" flattened to [10,11,12,13,14,15,16,19,22,23,24]
         DialogInput slotsInput = DialogInput.text(INPUT_SLOTS, translate("shops.create.input.slots"))
                 .maxLength(256)
-                .initial(oldTemplate == null ? "10-16" : serializeSlotRanges(oldTemplate.contentSlots().slots()))
+                .initial(template == null ? "10-16" : serializeSlotRanges(template.contentSlots().slots()))
                 .width(300)
                 .build();
 
@@ -104,7 +105,7 @@ public class CreateMarketDialog extends ShopsDialog {
         String rawSlots = view.getText(INPUT_SLOTS);
 
         if (rawTitle == null || rawTitle.isBlank()) {
-            player.sendMessage(translate("shops.create.error.empty_name"));
+            Viewers.sendMessage(player, "shops.create.error.empty_name");
             return;
         }
 
@@ -112,12 +113,12 @@ public class CreateMarketDialog extends ShopsDialog {
         try {
             contentSlots = parseSlotRanges(rawSlots, size);
         } catch (NumberFormatException e) {
-            player.sendMessage(translate("shops.create.error.invalid_slots"));
+            Viewers.sendMessage(player, "shops.create.error.invalid_slots");
             return;
         }
 
         if (contentSlots.isEmpty()) {
-            player.sendMessage(translate("shops.create.error.no_slots"));
+            Viewers.sendMessage(player, "shops.create.error.no_slots");
             return;
         }
 
@@ -125,16 +126,16 @@ public class CreateMarketDialog extends ShopsDialog {
         boolean isNewMarket = isNewMarket();
 
         if (isNewMarket && MarketManager.INSTANCE.exists(marketKey)) {
-            player.sendMessage(translate("shops.create.error.exists"));
+            Viewers.sendMessage(player, "shops.create.error.exists");
             return;
         }
 
-        MarketCreator marketCreator = new MarketCreator(marketKey, title, size, SlotList.of(contentSlots), oldTemplate);
+        MarketCreator marketCreator = new MarketCreator(marketKey, title, size, SlotList.of(contentSlots), template);
         marketCreator.open(player);
     }
 
     public boolean isNewMarket() {
-        return oldTemplate == null;
+        return template == null;
     }
 
     @Override

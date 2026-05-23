@@ -7,6 +7,7 @@ import dev.lumas.shops.components.templates.MarketTemplate;
 import dev.lumas.shops.constants.MarketSlot;
 import dev.lumas.shops.interfaces.Meta;
 import dev.lumas.shops.interfaces.ShopsInventory;
+import dev.lumas.shops.util.Viewers;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import net.kyori.adventure.key.Key;
@@ -50,25 +51,25 @@ public class MarketCreator implements ShopsInventory {
     private final SlotList contentSlots;
 
     @Nullable
-    private final MarketTemplate oldTemplate;
+    private final MarketTemplate template;
 
     @Accessors(fluent = false)
     private final Inventory inventory;
 
-    public MarketCreator(Key key, Component title, int size, SlotList contentSlots, @Nullable MarketTemplate oldTemplate) {
+    public MarketCreator(Key key, Component title, int size, SlotList contentSlots, @Nullable MarketTemplate template) {
         this.key = key;
         this.title = title;
         this.size = size;
         this.contentSlots = contentSlots;
-        this.oldTemplate = oldTemplate;
+        this.template = template;
         this.inventory = Bukkit.createInventory(this, size, title);
 
         for (Integer slot : contentSlots.slots()) {
             inventory.setItem(slot, CONTENT_SLOT_BLOCKER);
         }
 
-        if (oldTemplate != null) {
-            for (SlotEntry entry : oldTemplate.staticSlots()) {
+        if (template != null) {
+            for (SlotEntry entry : template.staticSlots()) {
                 inventory.setItem(entry.slot(), entry.stack());
             }
         }
@@ -87,12 +88,12 @@ public class MarketCreator implements ShopsInventory {
         Locale locale = player.locale();
         List<SlotEntry> staticSlots = getStaticSlots(locale);
 
-        if (oldTemplate == null) {
-            MarketManager.INSTANCE.create(key, title, size, staticSlots, contentSlots);
-            player.sendMessage(Component.translatable("shops.messages.create.success", Component.text(key.asString())));
-        } else {
+        if (MarketManager.INSTANCE.exists(key)) {
             MarketManager.INSTANCE.edit(key, title, size, staticSlots, contentSlots);
-            player.sendMessage(Component.translatable("shops.messages.edit.success", Component.text(key.asString())));
+            Viewers.sendMessage(player, "shops.messages.edit.success", key);
+        } else {
+            MarketManager.INSTANCE.create(key, title, size, staticSlots, contentSlots);
+            Viewers.sendMessage(player, "shops.messages.create.success", key);
         }
     }
 
@@ -100,8 +101,8 @@ public class MarketCreator implements ShopsInventory {
         // Snapshot old non-BORDER types by their original slot. Used to short-circuit
         // name-based detection when the player left a special slot untouched.
         Map<Integer, SlotEntry> previousByslot = new HashMap<>();
-        if (oldTemplate != null) {
-            for (SlotEntry entry : oldTemplate.staticSlots()) {
+        if (template != null) {
+            for (SlotEntry entry : template.staticSlots()) {
                 if (entry.type() != MarketSlot.BORDER) {
                     previousByslot.put(entry.slot(), entry);
                 }

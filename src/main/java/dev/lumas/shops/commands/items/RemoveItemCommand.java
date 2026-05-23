@@ -1,39 +1,51 @@
-package dev.lumas.shops.commands;
+package dev.lumas.shops.commands.items;
 
 import dev.lumas.core.annotation.Autowire;
 import dev.lumas.core.annotation.CommandMeta;
 import dev.lumas.core.annotation.Register;
 import dev.lumas.shops.Shops;
+import dev.lumas.shops.commands.CommandManager;
 import dev.lumas.shops.components.MarketManager;
 import dev.lumas.shops.components.templates.MarketTemplate;
 import dev.lumas.shops.interfaces.SubCommand;
+import dev.lumas.shops.util.Viewers;
 import net.kyori.adventure.key.Key;
-import net.kyori.adventure.text.Component;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
-@Register(Autowire.SUBCOMMAND)
-@CommandMeta(name = "delitem", playerOnly = true, parent = CommandManager.class)
 @NullMarked
-public class DelItemCommand implements SubCommand {
+@Register(Autowire.SUBCOMMAND)
+@CommandMeta(
+        name = "delitem",
+        playerOnly = true,
+        parent = CommandManager.class,
+        permission = "shops.command.removeitem",
+        usage = "/<command> delitem <marketKey> <itemKey>"
+)
+public class RemoveItemCommand implements SubCommand {
 
     @Override
     @SuppressWarnings("PatternValidation")
     public boolean execute(Shops plugin, CommandSender sender, String label, String[] args) {
         Player player = (Player) sender;
-        Key key = Key.key(args[0]);
+        Key marketKey = Key.key(args[0]);
         Key itemKey = Key.key(args[1]);
-        MarketTemplate template = MarketManager.INSTANCE.template(key);
+        MarketTemplate template = MarketManager.INSTANCE.template(marketKey);
 
         if (template == null) {
-            throw new UnsupportedOperationException("Not yet implemented.");
+            Viewers.sendMessage(player, "shops.messages.error.no_market");
+            return true;
         }
 
-        MarketManager.INSTANCE.removeItem(key, itemKey);
-        player.sendMessage(Component.translatable("shops.messages.delete.item.success", Component.text(itemKey.asString()), Component.text(key.asString())));
+        try {
+            MarketManager.INSTANCE.removeItem(marketKey, itemKey);
+            Viewers.sendMessage(player, "shops.messages.delete.item.success", itemKey, marketKey);
+        } catch (IllegalArgumentException _) {
+            Viewers.sendMessage(player, "shops.messages.error.no_item");
+        }
         return true;
     }
 

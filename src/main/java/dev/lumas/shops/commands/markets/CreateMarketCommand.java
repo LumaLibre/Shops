@@ -1,11 +1,11 @@
-package dev.lumas.shops.commands;
+package dev.lumas.shops.commands.markets;
 
 import dev.lumas.core.annotation.Autowire;
 import dev.lumas.core.annotation.CommandMeta;
 import dev.lumas.core.annotation.Register;
 import dev.lumas.shops.Shops;
-import dev.lumas.shops.components.Market;
-import dev.lumas.shops.components.MarketManager;
+import dev.lumas.shops.commands.CommandManager;
+import dev.lumas.shops.components.dialog.CreateMarketDialog;
 import dev.lumas.shops.interfaces.SubCommand;
 import net.kyori.adventure.key.Key;
 import org.bukkit.command.CommandSender;
@@ -15,25 +15,29 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
-@Register(Autowire.SUBCOMMAND)
-@CommandMeta(name = "market", playerOnly = true, parent = CommandManager.class)
 @NullMarked
-public class OpenCommand implements SubCommand {
+@Register(Autowire.SUBCOMMAND)
+@CommandMeta(
+        name = "create",
+        playerOnly = true,
+        parent = CommandManager.class,
+        permission = "shops.command.create",
+        usage = "/<command> create <key>"
+)
+public class CreateMarketCommand implements SubCommand {
+
     @Override
     public boolean execute(Shops plugin, CommandSender sender, String label, String[] args) {
         Player player = (Player) sender;
-        String rawKey = args[0];
-        Key key = Key.key(rawKey);
+        Key key = key(args[0]);
 
-        Market market = MarketManager.INSTANCE.market(key);
-        market.open(player);
-
-
+        CreateMarketDialog dialog = new CreateMarketDialog(player.locale(), key);
+        dialog.show(player);
         return true;
     }
 
     @Override
     public @Nullable List<String> tabComplete(Shops plugin, CommandSender sender, String[] args) {
-        return MarketManager.INSTANCE.keys().stream().map(Key::asString).toList();
+        return List.of();
     }
 }

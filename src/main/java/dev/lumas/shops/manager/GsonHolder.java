@@ -1,4 +1,4 @@
-package dev.lumas.shops.gson;
+package dev.lumas.shops.manager;
 
 import com.google.common.base.Preconditions;
 import com.google.gson.Gson;

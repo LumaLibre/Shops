@@ -40,6 +40,10 @@ public record MarketState(Key key, Map<PurchaseReceipt, Integer> receipts) imple
         return globalStock - getGlobalPurchasesOf(marketItemKey);
     }
 
+    public int getRemainingStock(int stock, PurchaseReceipt receipt) {
+        return stock - getPurchasesOf(receipt);
+    }
+
     public void addPurchase(PurchaseReceipt receipt) {
         receipts.merge(receipt, 1, Integer::sum);
         MarketManager.INSTANCE.save(this);

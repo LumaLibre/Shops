@@ -28,7 +28,7 @@ import java.util.Map;
 @NullMarked
 @Accessors(fluent = true)
 @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-public class Market implements ShopsInventory, Keyed {
+public class Market implements ShopsInventory {
 
     private static final Locale LOCALE = Locale.getDefault();
 

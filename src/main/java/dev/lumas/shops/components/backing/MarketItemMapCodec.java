@@ -10,7 +10,7 @@ import com.google.gson.stream.JsonWriter;
 import dev.lumas.shops.annotations.Singleton;
 import dev.lumas.shops.components.MarketItem;
 import dev.lumas.shops.components.data.Stock;
-import dev.lumas.shops.gson.GsonHolder;
+import dev.lumas.shops.manager.GsonHolder;
 import dev.lumas.shops.interfaces.Codec;
 import dev.lumas.shops.interfaces.Currency;
 import dev.lumas.shops.interfaces.Product;

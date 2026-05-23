@@ -26,7 +26,7 @@ public final class Shops extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        modules.unregister();
         MarketManager.INSTANCE.shutdown();
+        modules.unregister();
     }
 }

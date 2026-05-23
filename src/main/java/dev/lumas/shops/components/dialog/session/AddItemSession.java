@@ -34,9 +34,8 @@ public class AddItemSession {
         this.stock = stock;
     }
 
-    @SuppressWarnings("unchecked")
     public MarketItem build(Key key) {
         if (currency == null) throw new IllegalStateException("Currency not set");
-        return new MarketItem(key, stock, (Currency<Number>) currency, product, stack);
+        return new MarketItem(key, stock, currency, product, stack);
     }
 }

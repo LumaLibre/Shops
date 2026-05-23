@@ -8,9 +8,9 @@ import dev.lumas.shops.Shops;
 import dev.lumas.shops.interfaces.SubCommand;
 import org.jspecify.annotations.NullMarked;
 
-@Register(Autowire.COMMAND)
-@CommandMeta(name = "shops")
 @NullMarked
+@Register(Autowire.COMMAND)
+@CommandMeta(name = "shops", permission = "shops.command", usage = "/<command> <subcommand>")
 public class CommandManager extends AbstractCommandManager<Shops, SubCommand> {
     public CommandManager() {
         super(Shops.instance());

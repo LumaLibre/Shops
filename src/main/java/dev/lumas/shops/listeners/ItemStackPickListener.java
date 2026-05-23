@@ -7,6 +7,7 @@ import dev.lumas.core.annotation.Register;
 import dev.lumas.shops.components.dialog.session.ItemStackPickConfirmDialog;
 import dev.lumas.shops.components.dialog.session.AddItemSession;
 import dev.lumas.shops.util.Scheduling;
+import dev.lumas.shops.util.Viewers;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import org.bukkit.entity.Player;
@@ -65,7 +66,7 @@ public class ItemStackPickListener implements Listener {
                 task.cancel();
                 pendingMap.remove(player.getUniqueId());
                 player.clearTitle();
-                player.sendMessage(Component.translatable("shops.additem.itemstack.timeout"));
+                Viewers.sendMessage(player, "shops.additem.itemstack.timeout");
                 onCancel.run();
                 return;
             }

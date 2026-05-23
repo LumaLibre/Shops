@@ -8,7 +8,7 @@ import dev.lumas.shops.components.data.Stock;
 import dev.lumas.shops.components.dialog.session.AddItemSession;
 import dev.lumas.shops.components.dialog.session.CurrencyFlow;
 import dev.lumas.shops.components.product.CommandProductImpl;
-import dev.lumas.shops.components.product.LumaItemProductImpl;
+import dev.lumas.shops.components.product.LumaItemsProductImpl;
 import dev.lumas.shops.components.product.ShopItemProductImpl;
 import dev.lumas.shops.components.templates.MarketTemplate;
 import dev.lumas.shops.constants.suppliers.Currencies;
@@ -16,6 +16,7 @@ import dev.lumas.shops.constants.suppliers.Products;
 import dev.lumas.shops.interfaces.Product;
 import dev.lumas.shops.interfaces.ShopsDialog;
 import dev.lumas.shops.util.Numbers;
+import dev.lumas.shops.util.Viewers;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.registry.data.dialog.ActionButton;
@@ -26,7 +27,6 @@ import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import net.kyori.adventure.key.Key;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -152,7 +152,7 @@ public class AddMarketItemDialog extends ShopsDialog {
         int index = Math.round(Numbers.unbox(view.getFloat(INPUT_INDEX), (float) market.items().size()));
 
         if (currencyName == null || productName == null) {
-            player.sendMessage(translate("shops.additem.error.incomplete"));
+            Viewers.sendMessage(player, "shops.additem.error.incomplete");
             return;
         }
 
@@ -161,7 +161,7 @@ public class AddMarketItemDialog extends ShopsDialog {
 
         Product product = buildProduct(productType, productValue);
         if (product == null) {
-            player.sendMessage(translate("shops.additem.error.bad_product"));
+            Viewers.sendMessage(player, "shops.additem.error.bad_product");
             return;
         }
 
@@ -178,9 +178,9 @@ public class AddMarketItemDialog extends ShopsDialog {
                 if (value == null || value.isBlank()) yield null;
                 yield new CommandProductImpl(value);
             }
-            case LUMAITEM -> {
+            case LUMAITEMS -> {
                 if (value == null || value.isBlank()) yield null;
-                yield new LumaItemProductImpl(value);
+                yield new LumaItemsProductImpl(value);
             }
         };
     }
@@ -190,9 +190,9 @@ public class AddMarketItemDialog extends ShopsDialog {
         MarketItem item = session.build(key);
         try {
             MarketManager.INSTANCE.addItem(session.market().key(), item, index);
-            player.sendMessage(translate("shops.additem.success", Component.text(key.asString())));
+            Viewers.sendMessage(player, "shops.additem.success", key);
         } catch (Exception e) {
-            player.sendMessage(translate("shops.additem.error.save", Component.text(e.toString())));
+            Viewers.sendMessage(player, "shops.additem.error.save", e.toString());
             e.printStackTrace();
         }
     }

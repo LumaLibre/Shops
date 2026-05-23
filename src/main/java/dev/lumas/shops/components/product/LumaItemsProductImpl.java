@@ -9,11 +9,11 @@ import dev.lumas.shops.interfaces.EnumType;
 import dev.lumas.shops.interfaces.Product;
 import org.bukkit.entity.Player;
 
-public record LumaItemProductImpl(String key) implements Product, EnumType<Products> {
+public record LumaItemsProductImpl(String key) implements Product, EnumType<Products> {
 
     @Override
     public Products type() {
-        return Products.LUMAITEM;
+        return Products.LUMAITEMS;
     }
 
     @Override

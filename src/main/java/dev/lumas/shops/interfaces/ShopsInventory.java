@@ -1,7 +1,7 @@
 package dev.lumas.shops.interfaces;
 
-import dev.lumas.shops.Shops;
 import dev.lumas.shops.util.Scheduling;
+import net.kyori.adventure.key.Keyed;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -10,7 +10,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public interface ShopsInventory extends InventoryHolder {
+public interface ShopsInventory extends InventoryHolder, Keyed {
 
     default void open(Player player) {
         if (Bukkit.isOwnedByCurrentRegion(player)) {

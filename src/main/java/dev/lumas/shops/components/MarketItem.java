@@ -1,5 +1,6 @@
 package dev.lumas.shops.components;
 
+import com.google.common.base.Preconditions;
 import dev.lumas.shops.components.data.PurchaseReceipt;
 import dev.lumas.shops.components.data.Stock;
 import dev.lumas.shops.components.templates.MarketState;
@@ -7,6 +8,7 @@ import dev.lumas.shops.config.TranslatorService;
 import dev.lumas.shops.constants.PurchaseResult;
 import dev.lumas.shops.interfaces.Currency;
 import dev.lumas.shops.interfaces.Product;
+import dev.lumas.shops.util.ClassUtil;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -19,6 +21,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.translation.GlobalTranslator;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.jspecify.annotations.NullMarked;
 
 import java.util.ArrayList;
@@ -76,6 +79,14 @@ public class MarketItem implements Keyed {
 
         stackCopy.lore(components);
         return stackCopy;
+    }
+
+    public Component displayName() {
+        ItemMeta meta = stack.getItemMeta();
+        if (meta == null || !meta.hasCustomName()) {
+            return Component.text(ClassUtil.formatEnum(stack.getType()));
+        }
+        return Preconditions.checkNotNull(meta.customName(), "Item meta has no display name");
     }
 
     private void addLines(List<Component> target, Locale locale, String key, Object... args) {

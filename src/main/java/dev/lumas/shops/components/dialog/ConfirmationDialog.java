@@ -4,9 +4,14 @@ import dev.lumas.shops.components.data.KeyConsumerRegistry;
 import dev.lumas.shops.components.Market;
 import dev.lumas.shops.components.MarketItem;
 import dev.lumas.shops.components.data.KeyConsumer;
+import dev.lumas.shops.components.data.PurchaseReceipt;
+import dev.lumas.shops.constants.PurchaseResult;
 import dev.lumas.shops.interfaces.ShopsDialog;
+import dev.lumas.shops.util.CollectionUtil;
 import dev.lumas.shops.util.Scheduling;
+import dev.lumas.shops.util.Viewers;
 import io.papermc.paper.dialog.Dialog;
+import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
@@ -18,8 +23,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 
-import java.util.List;
-
 @NullMarked
 @SuppressWarnings("UnstableApiUsage")
 public class ConfirmationDialog extends ShopsDialog {
@@ -27,26 +30,21 @@ public class ConfirmationDialog extends ShopsDialog {
     private final KeyConsumer<ConfirmationDialog> yes = KeyConsumer.of(
             this,
             Key.key("shops:confirm/yes"),
-            (parent, player, _) -> {
-                Scheduling.entity(player, () -> {
-                    var result = parent.marketItem.purchase(parent.market, player);
-                    player.sendMessage("Result: " + result);
-                });
-            }
+            ConfirmationDialog::onConfirm
     );
     private final KeyConsumer<ConfirmationDialog> no = KeyConsumer.of(
             this,
             Key.key("shops:confirm/no"),
-            (parent, player, _) -> {
-                parent.market.open(player);
-            }
+            (_, _, _) -> {}
     );
 
+    private final Player player;
     private final Market market;
     private final MarketItem marketItem;
 
     public ConfirmationDialog(Player player, Market market, MarketItem marketItem) {
         super(player.locale());
+        this.player = player;
         this.market = market;
         this.marketItem = marketItem;
     }
@@ -55,10 +53,14 @@ public class ConfirmationDialog extends ShopsDialog {
     public Dialog build() {
         ItemStack itemStack = marketItem.stack();
         Component price = marketItem.currency().readablePrice();
+        int remainingStock = market.state().getRemainingStock(marketItem.stock().player(), PurchaseReceipt.of(player.getUniqueId(), marketItem.key()));
 
         DialogBody body = DialogBody.item(itemStack)
                 .description(DialogBody.plainMessage(translate("shops.confirm.content", price)))
                 .build();
+
+        DialogBody body2 = marketItem.stock().hasPlayerStock() ? DialogBody.plainMessage(translate("shops.confirm.player_stock", Component.text(remainingStock))) : null;
+
 
         ActionButton yesButton = ActionButton.builder(translate("shops.confirm.button.yes"))
                 .action(DialogAction.customClick(yes.key(), null))
@@ -70,7 +72,7 @@ public class ConfirmationDialog extends ShopsDialog {
 
         DialogBase base = DialogBase.builder(translate("shops.confirm.title"))
                 .canCloseWithEscape(true)
-                .body(List.of(body))
+                .body(CollectionUtil.ofNonNull(body, body2))
                 .build();
 
         return Dialog.create(b -> b.empty()
@@ -84,4 +86,15 @@ public class ConfirmationDialog extends ShopsDialog {
         KeyConsumerRegistry.INSTANCE.register(player, yes, no);
         player.showDialog(build());
     }
+
+    private void onConfirm(Player player, DialogResponseView view) {
+        Scheduling.entity(player, () -> {
+            PurchaseResult result = marketItem.purchase(market, player);
+            Component component = Component.text("1x ").append(marketItem.displayName());
+            Component price = marketItem.currency().readablePrice();
+
+            Viewers.sendMessage(player, result.translate(component, price));
+        });
+    }
+
 }

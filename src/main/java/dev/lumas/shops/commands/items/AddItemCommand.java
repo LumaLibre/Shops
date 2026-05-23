@@ -1,13 +1,15 @@
-package dev.lumas.shops.commands;
+package dev.lumas.shops.commands.items;
 
 import dev.lumas.core.annotation.Autowire;
 import dev.lumas.core.annotation.CommandMeta;
 import dev.lumas.core.annotation.Register;
 import dev.lumas.shops.Shops;
+import dev.lumas.shops.commands.CommandManager;
 import dev.lumas.shops.components.MarketManager;
 import dev.lumas.shops.components.dialog.AddMarketItemDialog;
 import dev.lumas.shops.components.templates.MarketTemplate;
 import dev.lumas.shops.interfaces.SubCommand;
+import dev.lumas.shops.util.Viewers;
 import net.kyori.adventure.key.Key;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -16,24 +18,31 @@ import org.jspecify.annotations.NullMarked;
 
 import java.util.List;
 
-@Register(Autowire.SUBCOMMAND)
-@CommandMeta(name = "additem", playerOnly = true, parent = CommandManager.class)
 @NullMarked
+@Register(Autowire.SUBCOMMAND)
+@CommandMeta(
+        name = "additem",
+        playerOnly = true,
+        parent = CommandManager.class,
+        permission = "shops.command.additem",
+        usage = "/<command> additem <marketKey>"
+)
 public class AddItemCommand implements SubCommand {
 
     @Override
-    @SuppressWarnings("PatternValidation")
     public boolean execute(Shops plugin, CommandSender sender, String label, String[] args) {
         Player player = (Player) sender;
         ItemStack itemStack = player.getInventory().getItemInMainHand();
         if (itemStack.getType().isAir()) {
-            throw new UnsupportedOperationException("Not yet implemented.");
+            Viewers.sendMessage(player, "shops.messages.error.bad_item");
+            return true;
         }
-        Key key = Key.key(args[0]);
+        Key key = key(args[0]);
         MarketTemplate template = MarketManager.INSTANCE.template(key);
 
         if (template == null) {
-            throw new UnsupportedOperationException("Not yet implemented.");
+            Viewers.sendMessage(player, "shops.messages.error.no_market");
+            return true;
         }
 
 

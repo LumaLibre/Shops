@@ -5,6 +5,7 @@ import dev.lumas.shops.components.data.KeyConsumer;
 import dev.lumas.shops.components.data.KeyConsumerRegistry;
 import dev.lumas.shops.interfaces.ShopsDialog;
 import dev.lumas.shops.util.Numbers;
+import dev.lumas.shops.util.Viewers;
 import io.papermc.paper.dialog.Dialog;
 import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.registry.data.dialog.ActionButton;
@@ -13,7 +14,6 @@ import io.papermc.paper.registry.data.dialog.action.DialogAction;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import net.kyori.adventure.key.Key;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
 
@@ -37,7 +37,7 @@ public class LumaItemCurrencyDialog extends ShopsDialog {
             this,
             Key.key("shops:additem/lumaitem/cancel"),
             (_, player, _) -> {
-                player.sendMessage(Component.translatable("shops.messages.cancelled"));
+                Viewers.sendMessage(player, "shops.messages.cancelled");
             }
     );
 
@@ -81,7 +81,7 @@ public class LumaItemCurrencyDialog extends ShopsDialog {
     private void onSubmit(Player player, DialogResponseView view) {
         String key = view.getText(INPUT_KEY);
         if (key == null || key.isBlank()) {
-            player.sendMessage(translate("shops.additem.error.bad_lumaitem_key"));
+            Viewers.sendMessage(player, "shops.additem.error.bad_lumaitem_key");
             return;
         }
         int amount = Numbers.parseInt(view.getText(INPUT_AMOUNT), 1);
