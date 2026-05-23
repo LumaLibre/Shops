@@ -9,7 +9,6 @@ import dev.lumas.shops.interfaces.ShopsInventory;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import lombok.experimental.Delegate;
-import net.kyori.adventure.key.Keyed;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -30,12 +29,12 @@ import java.util.Map;
 @SuppressWarnings("BooleanMethodIsAlwaysInverted")
 public class Market implements ShopsInventory {
 
-    private static final Locale LOCALE = Locale.getDefault();
-
     @Delegate
     private final MarketTemplate template;
     @Delegate
     private final MarketState state;
+
+    private final Locale locale;
 
     @Accessors(fluent = false)
     private final Inventory inventory;
@@ -44,9 +43,10 @@ public class Market implements ShopsInventory {
 
     private int page = 0;
 
-    public Market(MarketTemplate template, MarketState state) {
+    public Market(MarketTemplate template, MarketState state, Locale locale) {
         this.template = template;
         this.state = state;
+        this.locale = locale;
         this.inventory = Bukkit.createInventory(this, template.size(), template.title());
         this.render();
     }
@@ -105,7 +105,7 @@ public class Market implements ShopsInventory {
         for (int i = start; i < end; i++) {
             int slot = contentSlots.get(i - start);
             MarketItem item = items.get(i);
-            inventory.setItem(slot, item.display(state, LOCALE));
+            inventory.setItem(slot, item.display(state, locale));
             slotTypes.put(slot, MarketSlot.CONTENT);
             slotItems.put(slot, item);
         }
@@ -114,13 +114,13 @@ public class Market implements ShopsInventory {
     public void refreshSlot(int slot) {
         MarketItem item = slotItems.get(slot);
         if (item == null) return;
-        inventory.setItem(slot, item.display(state, LOCALE));
+        inventory.setItem(slot, item.display(state, locale));
     }
 
     public void refreshItem(MarketItem item) {
         slotItems.forEach((slot, slotItem) -> {
             if (slotItem == item) {
-                inventory.setItem(slot, item.display(state, LOCALE));
+                inventory.setItem(slot, item.display(state, locale));
             }
         });
     }

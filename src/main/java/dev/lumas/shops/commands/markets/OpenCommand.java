@@ -43,7 +43,7 @@ public class OpenCommand implements SubCommand {
             player = (Player) sender;
         }
 
-        Market market = MarketManager.INSTANCE.market(key);
+        Market market = MarketManager.INSTANCE.market(key, player.locale());
         if (market != null) {
             market.open(player);
         } else {

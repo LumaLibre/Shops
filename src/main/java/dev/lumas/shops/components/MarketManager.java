@@ -35,6 +35,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -81,11 +82,15 @@ public class MarketManager {
         bootstrapFromJarIfMissing();
     }
 
-
     public @Nullable Market market(Key key) {
+        return market(key, Locale.ROOT);
+    }
+
+    public @Nullable Market market(Key key, Locale locale) {
         MarketTemplate template = template(key);
         if (template == null) return null;
-        return template.toMarket(state(key));
+        MarketState state = state(key);
+        return new Market(template, state, locale);
     }
 
     public boolean exists(Key key) {
