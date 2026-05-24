@@ -30,8 +30,7 @@ public final class GsonHolder implements Service, Accessor<Gson> {
 
     public GsonHolder() {
         Map<TypeToken<?>, Object> resolvedAdapters = new HashMap<>();
-        Set<Class<?>> reflect = Reflect.from(Shops.class)
-                .scan(Codec.class);
+        Set<Class<?>> reflect = Reflect.from(Shops.class).scan(Codec.class);
         for (Class<?> clazz : reflect) {
             try {
                 // check if the class is abstract, and interface, or a singleton

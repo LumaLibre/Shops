@@ -4,7 +4,8 @@ import dev.lumas.core.annotation.Autowire;
 import dev.lumas.core.annotation.CommandMeta;
 import dev.lumas.core.annotation.Register;
 import dev.lumas.shops.Shops;
-import dev.lumas.shops.components.MarketManager;
+import dev.lumas.shops.config.ShopsConfig;
+import dev.lumas.shops.manager.MarketManager;
 import dev.lumas.shops.config.TranslatorService;
 import dev.lumas.shops.interfaces.SubCommand;
 import dev.lumas.shops.util.InventoryUtil;
@@ -31,7 +32,7 @@ public class ReloadCommand implements SubCommand {
         if (args.length == 0) {
             MarketManager.INSTANCE.invalidateAll();
             TranslatorService.instance().reload();
-            // TODO: Reload config
+            ShopsConfig.MEMORIZED.reload();
             Viewers.sendMessage(sender, "shops.messages.reloaded");
             InventoryUtil.closeAllMarkets();
         } else {

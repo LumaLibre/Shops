@@ -1,7 +1,7 @@
 package dev.lumas.shops.components.dialog;
 
 import dev.lumas.shops.components.MarketCreator;
-import dev.lumas.shops.components.MarketManager;
+import dev.lumas.shops.manager.MarketManager;
 import dev.lumas.shops.components.data.KeyConsumer;
 import dev.lumas.shops.components.data.KeyConsumerRegistry;
 import dev.lumas.shops.components.data.SlotList;

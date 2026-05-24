@@ -1,7 +1,10 @@
 package dev.lumas.shops.components.dialog;
 
+import com.google.common.base.Preconditions;
+import dev.lumas.shops.components.Market;
 import dev.lumas.shops.components.MarketItem;
-import dev.lumas.shops.components.MarketManager;
+import dev.lumas.shops.config.ShopsConfig;
+import dev.lumas.shops.manager.MarketManager;
 import dev.lumas.shops.components.data.KeyConsumer;
 import dev.lumas.shops.components.data.KeyConsumerRegistry;
 import dev.lumas.shops.components.data.Stock;
@@ -189,11 +192,19 @@ public class AddMarketItemDialog extends ShopsDialog {
         Key key = deriveItemKey(session);
         MarketItem item = session.build(key);
         try {
-            MarketManager.INSTANCE.addItem(session.market().key(), item, index);
+            Key marketKey = session.market().key();
+            MarketManager.INSTANCE.addItem(marketKey, item, index);
             Viewers.sendMessage(player, "shops.additem.success", key);
+
+            if (ShopsConfig.instance().openAfterAddingItem()) {
+                Market newMarket = MarketManager.INSTANCE.market(marketKey, player.locale());
+                Preconditions.checkNotNull(newMarket, "Market should not be null");
+                newMarket.open(player);
+                newMarket.setPage(item);
+            }
         } catch (Exception e) {
             Viewers.sendMessage(player, "shops.additem.error.save", e.toString());
-            e.printStackTrace();
+            throw e;
         }
     }
 

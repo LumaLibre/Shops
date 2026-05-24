@@ -62,15 +62,10 @@ public class TranslatorService extends MiniMessageTranslator implements Service 
     private Map<Locale, Properties> translations = Collections.emptyMap();
 
     public TranslatorService() {
-        this.defaultLocale = Locale.forLanguageTag("en-US");
-        this.clientSideTranslations = true;
+        ShopsConfig config = ShopsConfig.instance();
+        this.defaultLocale = Locale.forLanguageTag(config.locale());
+        this.clientSideTranslations = config.clientSideTranslations();
     }
-
-    public TranslatorService(Locale defaultLocale, boolean clientSideTranslations) {
-        this.defaultLocale = defaultLocale;
-        this.clientSideTranslations = clientSideTranslations;
-    }
-
 
     public void reload() {
         syncLangFiles();
@@ -351,9 +346,7 @@ public class TranslatorService extends MiniMessageTranslator implements Service 
         Properties props = null;
 
         if (clientSideTranslations) {
-            // try exact locale first (e.g. en-US)
             props = translations.get(locale);
-            // then language only (e.g. en) \u2014 graceful fallback for en-GB \u2192 en
             if (props == null || !props.containsKey(key)) {
                 Properties langOnly = translations.get(Locale.forLanguageTag(locale.getLanguage()));
                 if (langOnly != null && langOnly.containsKey(key)) {

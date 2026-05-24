@@ -9,6 +9,7 @@ import dev.lumas.shops.interfaces.ShopsInventory;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import lombok.experimental.Delegate;
+import net.kyori.adventure.key.Key;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -51,8 +52,13 @@ public class Market implements ShopsInventory {
         this.render();
     }
 
+    @Override
+    public Key key() {
+        return template.key(); // Explicitly return the template key
+    }
+
     public int pageCapacity() {
-        return template.contentSlots().slots().size();
+        return template.contentSlots().size();
     }
 
     public int pageCount() {
@@ -132,6 +138,35 @@ public class Market implements ShopsInventory {
     @Nullable
     public MarketItem itemAt(int slot) {
         return slotItems.get(slot);
+    }
+
+    /**
+     * Jumps to the given page index. Out-of-range values are clamped to
+     * {@code [0, pageCount() - 1]}. Re-renders only if the page actually changed.
+     *
+     * @return {@code true} if the page changed
+     */
+    public boolean setPage(int page) {
+        int clamped = Math.max(0, Math.min(page, pageCount() - 1));
+        if (clamped == this.page) return false;
+        this.page = clamped;
+        this.render();
+        return true;
+    }
+
+    /**
+     * Jumps to the page containing the given item. No-op if the item is not
+     * present in this market.
+     *
+     * @return {@code true} if the page changed
+     */
+    public boolean setPage(MarketItem item) {
+        List<MarketItem> items = template.itemList();
+        int index = items.indexOf(item);
+        if (index < 0) return false;
+        int capacity = pageCapacity();
+        if (capacity == 0) return false;
+        return setPage(index / capacity);
     }
 
     public void prePurchase(MarketItem marketItem, Player player) {

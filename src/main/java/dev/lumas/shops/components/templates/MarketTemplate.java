@@ -39,15 +39,9 @@ public class MarketTemplate implements Keyed {
         this.key = key;
         this.title = title;
         this.size = size;
-        this.contentSlots = (contentSlots == null || contentSlots.slots().isEmpty())
-                ? defaultContentSlots(size, staticSlots)
-                : contentSlots;
+        this.contentSlots = (contentSlots == null || contentSlots.isEmpty()) ? defaultContentSlots(size, staticSlots) : contentSlots;
         this.staticSlots = List.copyOf(staticSlots);
         this.items = new LinkedHashMap<>(items);
-    }
-
-    public Market toMarket(MarketState state) {
-        return new Market(this, state);
     }
 
     public MarketItem item(Key key) {

@@ -7,6 +7,7 @@ import dev.lumas.shops.components.templates.MarketTemplate;
 import dev.lumas.shops.constants.MarketSlot;
 import dev.lumas.shops.interfaces.Meta;
 import dev.lumas.shops.interfaces.ShopsInventory;
+import dev.lumas.shops.manager.MarketManager;
 import dev.lumas.shops.util.Viewers;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -64,7 +65,7 @@ public class MarketCreator implements ShopsInventory {
         this.template = template;
         this.inventory = Bukkit.createInventory(this, size, title);
 
-        for (Integer slot : contentSlots.slots()) {
+        for (Integer slot : contentSlots) {
             inventory.setItem(slot, CONTENT_SLOT_BLOCKER);
         }
 

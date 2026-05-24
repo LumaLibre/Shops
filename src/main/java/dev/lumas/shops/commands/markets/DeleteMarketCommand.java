@@ -6,7 +6,7 @@ import dev.lumas.core.annotation.Register;
 import dev.lumas.shops.Shops;
 import dev.lumas.shops.commands.ArgumentFlagReader;
 import dev.lumas.shops.commands.CommandManager;
-import dev.lumas.shops.components.MarketManager;
+import dev.lumas.shops.manager.MarketManager;
 import dev.lumas.shops.interfaces.SubCommand;
 import dev.lumas.shops.util.Viewers;
 import net.kyori.adventure.key.Key;

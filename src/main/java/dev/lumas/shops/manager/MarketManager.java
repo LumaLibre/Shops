@@ -1,13 +1,14 @@
-package dev.lumas.shops.components;
+package dev.lumas.shops.manager;
 
 import com.google.gson.Gson;
 import dev.lumas.core.util.PluginContextLogger;
 import dev.lumas.shops.Shops;
+import dev.lumas.shops.components.Market;
+import dev.lumas.shops.components.MarketItem;
 import dev.lumas.shops.components.data.SlotEntry;
 import dev.lumas.shops.components.data.SlotList;
 import dev.lumas.shops.components.templates.MarketState;
 import dev.lumas.shops.components.templates.MarketTemplate;
-import dev.lumas.shops.manager.GsonHolder;
 import lombok.SneakyThrows;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
@@ -57,7 +58,7 @@ import java.util.stream.Stream;
  * {@link #invalidate(Key)} or {@link #invalidateAll()}.
  */
 @NullMarked
-public class MarketManager {
+public final class MarketManager {
 
     private static final PluginContextLogger LOGGER = PluginContextLogger.getPluginLogger();
     private static final String STATE_SUFFIX = ".state.json";

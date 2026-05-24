@@ -6,7 +6,7 @@ import dev.lumas.core.annotation.Register;
 import dev.lumas.shops.Shops;
 import dev.lumas.shops.commands.CommandManager;
 import dev.lumas.shops.components.Market;
-import dev.lumas.shops.components.MarketManager;
+import dev.lumas.shops.manager.MarketManager;
 import dev.lumas.shops.interfaces.SubCommand;
 import dev.lumas.shops.util.Viewers;
 import net.kyori.adventure.key.Key;
@@ -27,7 +27,7 @@ import java.util.List;
         permission = "shops.command.market",
         usage = "/<command> market <key>"
 )
-public class OpenCommand implements SubCommand {
+public class OpenMarketCommand implements SubCommand {
     @Override
     public boolean execute(Shops plugin, CommandSender sender, String label, String[] args) {
         Key key = key(args[0]);

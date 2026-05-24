@@ -5,7 +5,7 @@ import dev.lumas.core.annotation.CommandMeta;
 import dev.lumas.core.annotation.Register;
 import dev.lumas.shops.Shops;
 import dev.lumas.shops.commands.CommandManager;
-import dev.lumas.shops.components.MarketManager;
+import dev.lumas.shops.manager.MarketManager;
 import dev.lumas.shops.components.dialog.CreateMarketDialog;
 import dev.lumas.shops.components.templates.MarketTemplate;
 import dev.lumas.shops.interfaces.SubCommand;

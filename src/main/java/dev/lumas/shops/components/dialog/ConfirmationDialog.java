@@ -5,6 +5,7 @@ import dev.lumas.shops.components.Market;
 import dev.lumas.shops.components.MarketItem;
 import dev.lumas.shops.components.data.KeyConsumer;
 import dev.lumas.shops.components.data.PurchaseReceipt;
+import dev.lumas.shops.config.ShopsConfig;
 import dev.lumas.shops.constants.PurchaseResult;
 import dev.lumas.shops.interfaces.ShopsDialog;
 import dev.lumas.shops.util.CollectionUtil;
@@ -94,6 +95,10 @@ public class ConfirmationDialog extends ShopsDialog {
             Component price = marketItem.currency().readablePrice();
 
             Viewers.sendMessage(player, result.translate(component, price));
+
+            if (result.isSuccess() && ShopsConfig.instance().closeAfterPurchase()) {
+                player.closeInventory();
+            }
         });
     }
 

@@ -1,7 +1,7 @@
 package dev.lumas.shops;
 
 import dev.lumas.core.manager.Modules;
-import dev.lumas.shops.components.MarketManager;
+import dev.lumas.shops.manager.MarketManager;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.bukkit.plugin.java.JavaPlugin;

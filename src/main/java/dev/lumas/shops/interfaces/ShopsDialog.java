@@ -9,6 +9,9 @@ import org.bukkit.entity.Player;
 
 import java.util.Locale;
 
+/**
+ * Represents a dialog used by this plugin.
+ */
 @AllArgsConstructor
 public abstract class ShopsDialog {
 
@@ -18,7 +21,15 @@ public abstract class ShopsDialog {
         return GlobalTranslator.render(Component.translatable(key, args), locale);
     }
 
+    /**
+     * Builds the dialog.
+     * @return The built dialog.
+     */
     public abstract Dialog build();
 
+    /**
+     * Shows the dialog to the player.
+     * @param player The player to show the dialog to.
+     */
     public abstract void show(Player player);
 }

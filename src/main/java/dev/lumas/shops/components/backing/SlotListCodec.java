@@ -21,9 +21,9 @@ public class SlotListCodec extends Codec<SlotList> {
     @SneakyThrows
     public void write(JsonWriter out, SlotList value) {
         StringBuilder sb = new StringBuilder("[");
-        for (int i = 0; i < value.slots().size(); i++) {
+        for (int i = 0; i < value.size(); i++) {
             if (i > 0) sb.append(',');
-            sb.append(value.slots().get(i));
+            sb.append(value.get(i));
         }
         sb.append(']');
         out.jsonValue(sb.toString());

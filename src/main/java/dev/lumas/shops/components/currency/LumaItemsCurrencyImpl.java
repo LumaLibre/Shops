@@ -13,7 +13,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
-// TODO: Implement
 public record LumaItemsCurrencyImpl(LumaItemsAmount amount) implements Currency<Integer> {
 
     @Override

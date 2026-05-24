@@ -21,10 +21,7 @@ import org.bukkit.inventory.ItemStack;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@Singleton
 public class MarketItemMapCodec extends Codec<Map<Key, MarketItem>> {
-
-    public static final MarketItemMapCodec INSTANCE = new MarketItemMapCodec();
 
     private static final TypeToken<Map<Key, MarketItem>> TYPE = new TypeToken<>() {};
     private static final TypeToken<MarketItem> ITEM_TYPE = TypeToken.get(MarketItem.class);

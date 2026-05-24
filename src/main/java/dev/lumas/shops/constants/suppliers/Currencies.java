@@ -7,6 +7,7 @@ import dev.lumas.shops.components.data.TypedEntry;
 import dev.lumas.shops.interfaces.Currency;
 import org.jspecify.annotations.NullMarked;
 
+// TODO: This should be a registry
 @NullMarked
 public enum Currencies {
     MONEY(new TypedEntry<>(Double.class, MoneyCurrencyImpl::new)),

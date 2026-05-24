@@ -1,6 +1,6 @@
 package dev.lumas.shops.components.templates;
 
-import dev.lumas.shops.components.MarketManager;
+import dev.lumas.shops.manager.MarketManager;
 import dev.lumas.shops.components.data.PurchaseReceipt;
 import lombok.experimental.Accessors;
 import net.kyori.adventure.key.Key;

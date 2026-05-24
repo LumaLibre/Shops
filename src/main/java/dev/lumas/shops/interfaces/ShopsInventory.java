@@ -9,6 +9,9 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.jspecify.annotations.NullMarked;
 
+/**
+ * Represents an inventory used by this plugin.
+ */
 @NullMarked
 public interface ShopsInventory extends InventoryHolder, Keyed {
 

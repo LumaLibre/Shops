@@ -8,7 +8,6 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
-import dev.lumas.shops.annotations.Singleton;
 import dev.lumas.shops.interfaces.Codec;
 import lombok.SneakyThrows;
 import org.bukkit.Bukkit;
@@ -16,10 +15,7 @@ import org.bukkit.inventory.ItemStack;
 
 import java.util.Base64;
 
-@Singleton
 public class ItemStackCodec extends Codec<ItemStack> {
-
-    public static final ItemStackCodec INSTANCE = new ItemStackCodec();
 
     @Override
     public TypeToken<ItemStack> type() {

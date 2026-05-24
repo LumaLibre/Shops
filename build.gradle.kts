@@ -1,12 +1,25 @@
+import java.nio.charset.Charset
+
 plugins {
     id("java")
     id("io.freefair.lombok") version "9.5.0"
     id("xyz.jpenilla.run-paper") version "3.0.1"
-    id("io.papermc.paperweight.userdev") version "2.0.0-beta.21"
 }
 
 group = "dev.lumas.shops"
-version = "1.0-SNAPSHOT"
+version = try {
+    ProcessBuilder("git", "rev-parse", "--short", "HEAD")
+        .redirectErrorStream(true)
+        .start()
+        .inputStream
+        .bufferedReader(Charset.defaultCharset())
+        .readText()
+        .trim()
+        .ifBlank { "none" }
+} catch (e: Exception) {
+    e.printStackTrace()
+    "none"
+}
 
 repositories {
     mavenCentral()
@@ -17,6 +30,7 @@ repositories {
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:26.1.2.build.+")
+    compileOnly("org.spongepowered:configurate-yaml:4.2.0")
     compileOnly("dev.lumas.core:LumaCore:8271600")
     compileOnly("dev.lumas.lumaitems:LumaItems:42e7303")
     compileOnly("com.github.MilkBowl:VaultAPI:1.7") {
