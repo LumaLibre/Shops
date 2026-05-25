@@ -34,11 +34,11 @@ public record LumaItemsCurrencyImpl(LumaItemsAmount amount) implements Currency<
     }
 
     @Override
-    public boolean withdraw(Player player) {
+    public boolean withdraw(Player player, int multiplier) {
         NamespacedKey namespacedKey = new NamespacedKey(LumaItems.getInstance(), amount.key());
         PlayerInventory inventory = player.getInventory();
 
-        int amount = this.amount.amount();
+        int amount = this.amount.amount() * multiplier;
         int total = getBalance(player);
 
 
@@ -75,7 +75,7 @@ public record LumaItemsCurrencyImpl(LumaItemsAmount amount) implements Currency<
     }
 
     @Override
-    public Component readablePrice() {
+    public Component readablePrice(int multiplier) {
         CustomItem customItem = LumaItemsAPI.getInstance().getCustomItem(amount.key());
         // TODO: Fail gracefully
         Preconditions.checkNotNull(customItem, "Custom item with key " + amount.key() + " does not exist");
@@ -83,7 +83,7 @@ public record LumaItemsCurrencyImpl(LumaItemsAmount amount) implements Currency<
         ItemStack itemStack = customItem.createItem().getSecond();
         Component customName = itemStack.getItemMeta().customName();
         Component name = customName != null ? customName : Component.text(ClassUtil.formatEnum(itemStack.getType()));
-        return Component.text(amount.amount() + "x ").append(name);
+        return Component.text((amount.amount() * multiplier) + "x ").append(name);
     }
 
     @Override

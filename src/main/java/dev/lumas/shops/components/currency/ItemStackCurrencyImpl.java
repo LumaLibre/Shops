@@ -21,8 +21,8 @@ public record ItemStackCurrencyImpl(ItemStackAmount amount) implements Currency<
     }
 
     @Override
-    public boolean withdraw(Player player) {
-        return takeItem(player, amount.itemStack(), amount.amount());
+    public boolean withdraw(Player player, int multiplier) {
+        return takeItem(player, amount.itemStack(), amount.amount() * multiplier);
     }
 
     @Override
@@ -36,11 +36,11 @@ public record ItemStackCurrencyImpl(ItemStackAmount amount) implements Currency<
     }
 
     @Override
-    public Component readablePrice() {
+    public Component readablePrice(int multiplier) {
         ItemStack itemStack = amount.itemStack();
         Component customName = itemStack.getItemMeta().customName();
         Component name = customName != null ? customName : Component.text(ClassUtil.formatEnum(itemStack.getType()));
-        return Component.text(amount.amount() + "x ").append(name);
+        return Component.text((amount.amount() * multiplier) + "x ").append(name);
     }
 
     @Override

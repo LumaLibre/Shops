@@ -169,8 +169,8 @@ public class Market implements ShopsInventory {
         return setPage(index / capacity);
     }
 
-    public void prePurchase(MarketItem marketItem, Player player) {
-        ConfirmationDialog dialog = new ConfirmationDialog(player, this, marketItem);
+    public void prePurchase(MarketItem marketItem, Player player, boolean showAmountSelector) {
+        ConfirmationDialog dialog = new ConfirmationDialog(player, this, marketItem, showAmountSelector);
         dialog.show(player);
     }
 
@@ -184,7 +184,7 @@ public class Market implements ShopsInventory {
             case CONTENT -> {
                 MarketItem item = itemAt(slot);
                 if (item != null) {
-                    this.prePurchase(item, player);
+                    this.prePurchase(item, player, event.getClick().isRightClick());
                 }
             }
             case PREVIOUS_PAGE -> previousPage();

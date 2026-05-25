@@ -70,4 +70,8 @@ public class ShopsConfig {
     @Setting("open-after-adding-item")
     private boolean openAfterAddingItem = false;
 
+    @Comment("The maximum amount of items that can be purchased at once.")
+    @Setting("max-purchase-amount")
+    private int maxPurchaseAmount = 10;
+
 }

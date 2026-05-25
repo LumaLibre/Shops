@@ -32,8 +32,8 @@ public record MoneyCurrencyImpl(double cost) implements Currency<Double> {
     }
 
     @Override
-    public boolean withdraw(Player player) {
-        EconomyResponse response = economy().withdrawPlayer(player, cost);
+    public boolean withdraw(Player player, int multiplier) {
+        EconomyResponse response = economy().withdrawPlayer(player, cost * multiplier);
         return response.transactionSuccess();
     }
 
@@ -43,8 +43,8 @@ public record MoneyCurrencyImpl(double cost) implements Currency<Double> {
     }
 
     @Override
-    public Component readablePrice() {
-        return Component.text("$" + String.format("%.2f", cost));
+    public Component readablePrice(int multiplier) {
+        return Component.text("$" + String.format("%.2f", cost * multiplier));
     }
 
     @Override

@@ -2,6 +2,7 @@ package dev.lumas.shops;
 
 import dev.lumas.core.manager.Modules;
 import dev.lumas.shops.manager.MarketManager;
+import dev.lumas.shops.util.InventoryUtil;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -22,11 +23,17 @@ public final class Shops extends JavaPlugin {
     @Override
     public void onEnable() {
         modules.register();
+        MarketManager.INSTANCE.bootstrapFromJarIfMissing();
     }
 
     @Override
     public void onDisable() {
         MarketManager.INSTANCE.shutdown();
         modules.unregister();
+
+        try {
+            InventoryUtil.closeAllMarkets();
+        } catch (Exception ignored) {
+        }
     }
 }

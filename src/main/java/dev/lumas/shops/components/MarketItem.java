@@ -41,23 +41,26 @@ public class MarketItem implements Keyed {
     private final Product product;
     private final ItemStack stack;
 
-
     public PurchaseResult purchase(Market market, Player player) {
-        if (!currency.hasEnough(player)) {
+        return purchase(market, player, 1);
+    }
+
+    public PurchaseResult purchase(Market market, Player player, int amount) {
+        if (!currency.hasEnough(player, amount)) {
             return PurchaseResult.NOT_ENOUGH_CURRENCY;
         }
         PurchaseReceipt fingerPrint = PurchaseReceipt.of(player.getUniqueId(), key);
 
-        if (stock.hasPlayerStock() && market.getPurchasesOf(fingerPrint) >= stock.player()) {
+        if (stock.hasPlayerStock() && market.getPurchasesOf(fingerPrint) + amount > stock.player()) {
             return PurchaseResult.TOO_MANY_PURCHASES;
-        } else if (stock.hasGlobalStock() && market.getGlobalPurchasesOf(key) + 1 > stock.global()) {
+        } else if (stock.hasGlobalStock() && market.getGlobalPurchasesOf(key) + amount > stock.global()) {
             return PurchaseResult.NOT_ENOUGH_STOCK;
         }
 
-        if (currency.withdraw(player)) {
+        if (currency.withdraw(player, amount)) {
             market.addPurchase(fingerPrint);
             market.refreshItem(this);
-            product.give(player, this, 1);
+            product.give(player, this, amount);
         } else {
             throw new IllegalStateException("Currency withdraw failed");
         }

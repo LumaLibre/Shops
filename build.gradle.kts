@@ -4,6 +4,7 @@ plugins {
     id("java")
     id("io.freefair.lombok") version "9.5.0"
     id("xyz.jpenilla.run-paper") version "3.0.1"
+    id("de.eldoria.plugin-yml.bukkit") version "0.9.0"
 }
 
 group = "dev.lumas.shops"
@@ -44,4 +45,13 @@ java {
 
 tasks.runServer {
     minecraftVersion("26.1.2")
+}
+
+bukkit {
+    name = "Shops"
+    main = "dev.lumas.shops.Shops"
+    version = project.version.toString()
+    apiVersion = "26.1"
+    foliaSupported = true
+    depend = listOf("LumaCore")
 }

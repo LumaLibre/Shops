@@ -79,9 +79,6 @@ public final class MarketManager {
         return t;
     });
 
-    public MarketManager() {
-        bootstrapFromJarIfMissing();
-    }
 
     public @Nullable Market market(Key key) {
         return market(key, Locale.ROOT);
@@ -264,7 +261,7 @@ public final class MarketManager {
     }
 
 
-    private void bootstrapFromJarIfMissing() {
+    public void bootstrapFromJarIfMissing() {
         if (Files.exists(directory)) return;
 
         try {
