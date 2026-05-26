@@ -1,7 +1,7 @@
 package dev.lumas.shops.components.templates;
 
-import dev.lumas.shops.manager.MarketManager;
 import dev.lumas.shops.components.data.PurchaseReceipt;
+import dev.lumas.shops.manager.MarketManager;
 import lombok.experimental.Accessors;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.Keyed;
@@ -44,8 +44,8 @@ public record MarketState(Key key, Map<PurchaseReceipt, Integer> receipts) imple
         return stock - getPurchasesOf(receipt);
     }
 
-    public void addPurchase(PurchaseReceipt receipt) {
-        receipts.merge(receipt, 1, Integer::sum);
+    public void addPurchase(PurchaseReceipt receipt, int amount) {
+        receipts.merge(receipt, amount, Integer::sum);
         MarketManager.INSTANCE.save(this);
     }
 }

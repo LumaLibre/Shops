@@ -343,7 +343,7 @@ public final class MarketManager {
         return template;
     }
 
-    private MarketState state(Key key) {
+    public MarketState state(Key key) {
         MarketState cached = stateCache.get(key);
         if (cached != null) return cached;
 

@@ -1,6 +1,5 @@
 package dev.lumas.shops.components.templates;
 
-import dev.lumas.shops.components.Market;
 import dev.lumas.shops.components.MarketItem;
 import dev.lumas.shops.components.data.SlotEntry;
 import dev.lumas.shops.components.data.SlotList;
@@ -44,6 +43,7 @@ public class MarketTemplate implements Keyed {
         this.items = new LinkedHashMap<>(items);
     }
 
+    @Nullable
     public MarketItem item(Key key) {
         return items.get(key);
     }

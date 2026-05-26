@@ -8,6 +8,7 @@ import dev.lumas.shops.constants.suppliers.Products;
 import dev.lumas.shops.interfaces.EnumType;
 import dev.lumas.shops.interfaces.Product;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 public record LumaItemsProductImpl(String key) implements Product, EnumType<Products> {
 
@@ -21,8 +22,15 @@ public record LumaItemsProductImpl(String key) implements Product, EnumType<Prod
         CustomItem customItem = LumaItemsAPI.getInstance().getCustomItem(key);
         Preconditions.checkNotNull(customItem, "Custom item with key " + key + " does not exist");
 
-        // FIXME: Exception when amount > than max stack size
-        player.give(customItem.createItem().getSecond().asQuantity(amount));
+        ItemStack template = customItem.createItem().getSecond();
+        int maxStackSize = template.getMaxStackSize();
+        int remaining = amount;
+
+        while (remaining > 0) {
+            int stackAmount = Math.min(remaining, maxStackSize);
+            player.give(template.asQuantity(stackAmount));
+            remaining -= stackAmount;
+        }
     }
 
     @Override
