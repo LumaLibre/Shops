@@ -15,9 +15,6 @@ import org.jspecify.annotations.NullMarked;
 @NullMarked
 public final class KeyProvider implements ArgumentTypeProvider {
 
-    private static final DynamicCommandExceptionType INVALID_KEY = new DynamicCommandExceptionType(input ->
-            new LiteralMessage("Invalid key '" + input + "'"));
-
     @Override
     public ArgumentType<?> provide() {
         return new ShopsKeyArgumentType();
@@ -25,6 +22,8 @@ public final class KeyProvider implements ArgumentTypeProvider {
 
     public static final class ShopsKeyArgumentType implements CustomArgumentType<Key, Key> {
 
+        private static final DynamicCommandExceptionType INVALID_KEY = new DynamicCommandExceptionType(input ->
+                new LiteralMessage("Invalid key '" + input + "'"));
         private static final ArgumentType<Key> NATIVE = ArgumentTypes.key();
         private static final char WHITESPACE = ' ';
 

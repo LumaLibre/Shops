@@ -9,11 +9,11 @@ import dev.lumas.core.annotation.BrigadierExecutor;
 import dev.lumas.core.annotation.CommandMeta;
 import dev.lumas.core.annotation.Register;
 import dev.lumas.core.annotation.Suggests;
+import dev.lumas.core.model.brigadier.BrigadierSubCommand;
 import dev.lumas.shops.commands.CommandManager;
 import dev.lumas.shops.commands.providers.KeyProvider;
 import dev.lumas.shops.components.dialog.CreateMarketDialog;
 import dev.lumas.shops.components.templates.MarketTemplate;
-import dev.lumas.shops.interfaces.SubCommand;
 import dev.lumas.shops.manager.MarketManager;
 import dev.lumas.shops.util.Viewers;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -28,11 +28,11 @@ import java.util.concurrent.CompletableFuture;
 @CommandMeta(
         name = "edit",
         playerOnly = true,
-        parent = CommandManager.class,
         permission = "shops.command.edit",
-        usage = "/<command> edit <key>"
+        usage = "/<command> edit <key>",
+        parent = CommandManager.class
 )
-public class EditMarketCommand implements SubCommand {
+public class EditMarketCommand implements BrigadierSubCommand {
 
     @BrigadierExecutor
     public void run(CommandSourceStack src, @Argument(value = "key", provider = KeyProvider.class) Key key) {

@@ -20,7 +20,7 @@ public class ComponentCodec extends Codec<Component> {
     @Override
     @SneakyThrows
     public void write(JsonWriter out, Component value) {
-        // serialze to minimessage
+        // serialize to minimessage
         String serialized = miniMessage.serialize(value);
         out.value(serialized);
     }

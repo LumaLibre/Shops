@@ -31,9 +31,9 @@ import java.util.concurrent.CompletableFuture;
 @CommandMeta(
         name = "market",
         aliases = "open",
-        parent = CommandManager.class,
         permission = "shops.command.market",
-        usage = "/<command> market <key> [target]"
+        usage = "/<command> market <key> [target]",
+        parent = CommandManager.class
 )
 public class OpenMarketCommand implements BrigadierSubCommand {
 

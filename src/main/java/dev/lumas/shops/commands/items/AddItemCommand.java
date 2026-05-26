@@ -29,9 +29,9 @@ import java.util.concurrent.CompletableFuture;
 @CommandMeta(
         name = "additem",
         playerOnly = true,
-        parent = CommandManager.class,
         permission = "shops.command.additem",
-        usage = "/<command> additem <marketKey>"
+        usage = "/<command> additem <marketKey>",
+        parent = CommandManager.class
 )
 public class AddItemCommand implements BrigadierSubCommand {
 

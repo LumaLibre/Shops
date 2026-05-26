@@ -20,9 +20,9 @@ import org.jspecify.annotations.NullMarked;
 @Register(Autowire.BRIGADIER)
 @CommandMeta(
         name = "delete",
-        parent = CommandManager.class,
         permission = "shops.command.delete",
-        usage = "/<command> delete <key> confirm"
+        usage = "/<command> delete <key> -confirm",
+        parent = CommandManager.class
 )
 public class DeleteMarketCommand implements BrigadierSubCommand {
     // Using DSL for '-confirm'

@@ -39,9 +39,9 @@ import java.util.concurrent.CompletableFuture;
 @CommandMeta(
         name = "serialize",
         playerOnly = true,
-        parent = CommandManager.class,
         permission = "shops.command.serialize",
-        usage = "/<command> serialize [flags...]"
+        usage = "/<command> serialize [flags...]",
+        parent = CommandManager.class
 )
 public class SerializeItemCommand implements BrigadierSubCommand {
 

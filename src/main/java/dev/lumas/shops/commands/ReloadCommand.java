@@ -28,9 +28,9 @@ import java.util.concurrent.CompletableFuture;
 @Register(Autowire.BRIGADIER)
 @CommandMeta(
         name = "reload",
-        parent = CommandManager.class,
         permission = "shops.command.reload",
-        usage = "/<command> reload [key]"
+        usage = "/<command> reload [key]",
+        parent = CommandManager.class
 )
 public class ReloadCommand implements BrigadierSubCommand {
 
@@ -42,12 +42,12 @@ public class ReloadCommand implements BrigadierSubCommand {
             TranslatorService.instance().reload();
             ShopsConfig.MEMORIZED.reload();
             Viewers.sendMessage(sender, "shops.messages.reloaded");
-            InventoryUtil.closeAllMarkets();
         } else {
             MarketManager.INSTANCE.invalidate(key);
             Viewers.sendMessage(sender, "shops.messages.reloaded.market", key);
-            InventoryUtil.closeAllMarkets(key);
         }
+
+        InventoryUtil.closeAllMarkets(key);
     }
 
     @Suggests("key")

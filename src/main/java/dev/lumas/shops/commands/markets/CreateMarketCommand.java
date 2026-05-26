@@ -5,10 +5,10 @@ import dev.lumas.core.annotation.Autowire;
 import dev.lumas.core.annotation.BrigadierExecutor;
 import dev.lumas.core.annotation.CommandMeta;
 import dev.lumas.core.annotation.Register;
+import dev.lumas.core.model.brigadier.BrigadierSubCommand;
 import dev.lumas.shops.commands.CommandManager;
 import dev.lumas.shops.commands.providers.KeyProvider;
 import dev.lumas.shops.components.dialog.CreateMarketDialog;
-import dev.lumas.shops.interfaces.SubCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.key.Key;
 import org.bukkit.entity.Player;
@@ -19,12 +19,11 @@ import org.jspecify.annotations.NullMarked;
 @CommandMeta(
         name = "create",
         playerOnly = true,
-        parent = CommandManager.class,
         permission = "shops.command.create",
-        usage = "/<command> create <key>"
+        usage = "/<command> create <key>",
+        parent = CommandManager.class
 )
-public class CreateMarketCommand implements SubCommand {
-
+public class CreateMarketCommand implements BrigadierSubCommand {
 
     @BrigadierExecutor
     public void run(CommandSourceStack src, @Argument(value = "key", provider = KeyProvider.class) Key key) {
@@ -33,6 +32,5 @@ public class CreateMarketCommand implements SubCommand {
         CreateMarketDialog dialog = new CreateMarketDialog(player.locale(), key);
         dialog.show(player);
     }
-
 
 }

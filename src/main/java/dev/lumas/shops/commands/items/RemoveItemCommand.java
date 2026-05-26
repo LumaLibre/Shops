@@ -27,9 +27,9 @@ import java.util.concurrent.CompletableFuture;
 @CommandMeta(
         name = "delitem",
         playerOnly = true,
-        parent = CommandManager.class,
         permission = "shops.command.removeitem",
-        usage = "/<command> delitem <marketKey> <itemKey>"
+        usage = "/<command> delitem <marketKey> <itemKey>",
+        parent = CommandManager.class
 )
 public class RemoveItemCommand implements BrigadierSubCommand {
 

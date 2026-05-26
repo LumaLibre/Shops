@@ -28,9 +28,9 @@ import java.util.concurrent.CompletableFuture;
 @CommandMeta(
         name = "clone",
         playerOnly = true,
-        parent = CommandManager.class,
         permission = "shops.command.clone",
-        usage = "/<command> clone <key> <newKey>"
+        usage = "/<command> clone <key> <newKey>",
+        parent = CommandManager.class
 )
 public class CloneMarketCommand implements BrigadierSubCommand {
 
