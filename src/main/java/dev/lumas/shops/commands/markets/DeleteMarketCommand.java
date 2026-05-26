@@ -1,51 +1,59 @@
 package dev.lumas.shops.commands.markets;
 
+import com.mojang.brigadier.Command;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import dev.lumas.core.annotation.Autowire;
 import dev.lumas.core.annotation.CommandMeta;
 import dev.lumas.core.annotation.Register;
-import dev.lumas.shops.Shops;
-import dev.lumas.shops.commands.ArgumentFlagReader;
+import dev.lumas.core.model.brigadier.BrigadierSubCommand;
 import dev.lumas.shops.commands.CommandManager;
+import dev.lumas.shops.commands.providers.KeyProvider;
 import dev.lumas.shops.manager.MarketManager;
-import dev.lumas.shops.interfaces.SubCommand;
 import dev.lumas.shops.util.Viewers;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.key.Key;
 import org.bukkit.command.CommandSender;
 import org.jspecify.annotations.NullMarked;
-import org.jspecify.annotations.Nullable;
-
-import java.util.List;
 
 @NullMarked
-@Register(Autowire.SUBCOMMAND)
+@Register(Autowire.BRIGADIER)
 @CommandMeta(
         name = "delete",
         parent = CommandManager.class,
         permission = "shops.command.delete",
-        usage = "/<command> delete <key> -confirm"
+        usage = "/<command> delete <key> confirm"
 )
-public class DeleteMarketCommand implements SubCommand {
-
+public class DeleteMarketCommand implements BrigadierSubCommand {
+    // Using DSL for '-confirm'
     @Override
-    public boolean execute(Shops plugin, CommandSender sender, String label, String[] args) {
-        ArgumentFlagReader flagReader = new ArgumentFlagReader(args);
-        Key key = key(args[0]);
-
-        if (flagReader.getFlagValueAsBoolean("confirm")) {
-            MarketManager.INSTANCE.deleteMarket(key);
-            Viewers.sendMessage(sender, "shops.messages.delete.success");
-            return true;
-        } else {
-            Viewers.sendMessage(sender, "shops.messages.confirm");
-            return false;
-        }
-    }
-
-    @Override
-    public @Nullable List<String> tabComplete(Shops plugin, CommandSender sender, String[] args) {
-        if (args.length == 1) {
-            return MarketManager.INSTANCE.keys().stream().map(Key::asString).toList();
-        }
-        return List.of();
+    public LiteralArgumentBuilder<CommandSourceStack> buildTree(LiteralArgumentBuilder<CommandSourceStack> builder, Commands commands) {
+        return builder.then(Commands.argument("key", new KeyProvider().provide())
+                .suggests((ctx, suggestions) -> {
+                    String remaining = suggestions.getRemaining().toLowerCase();
+                    MarketManager.INSTANCE.keys().stream()
+                            .map(Key::asString)
+                            .filter(s -> s.toLowerCase().startsWith(remaining))
+                            .forEach(suggestions::suggest);
+                    return suggestions.buildFuture();
+                })
+                .executes(ctx -> {
+                    Viewers.sendMessage(ctx.getSource().getSender(), "shops.messages.confirm");
+                    return 0;
+                })
+                .then(Commands.literal("-confirm")
+                        .executes(ctx -> {
+                            CommandSender sender = ctx.getSource().getSender();
+                            Key key = ctx.getArgument("key", Key.class);
+                            try {
+                                MarketManager.INSTANCE.deleteMarket(key);
+                                Viewers.sendMessage(sender, "shops.messages.delete.success", key);
+                            } catch (IllegalArgumentException _) {
+                                Viewers.sendMessage(sender, "shops.messages.error.no_market");
+                            }
+                            return Command.SINGLE_SUCCESS;
+                        })
+                )
+        );
     }
 }

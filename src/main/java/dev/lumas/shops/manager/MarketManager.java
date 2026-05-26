@@ -195,7 +195,7 @@ public final class MarketManager {
     @SneakyThrows
     public void deleteMarket(Key key) {
         if (!exists(key)) {
-            throw new IllegalStateException("No market exists for key: " + key);
+            throw new IllegalArgumentException("No market exists for key: " + key);
         }
 
         Files.deleteIfExists(templateFileFor(key));

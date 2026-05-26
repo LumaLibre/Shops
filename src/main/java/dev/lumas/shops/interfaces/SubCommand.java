@@ -1,13 +1,12 @@
 package dev.lumas.shops.interfaces;
 
-import dev.lumas.core.model.command.AbstractSubCommand;
-import dev.lumas.shops.Shops;
+import dev.lumas.core.model.brigadier.BrigadierSubCommand;
 import dev.lumas.shops.config.ShopsConfig;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
 
 @NullMarked
-public interface SubCommand extends AbstractSubCommand<Shops> {
+public interface SubCommand extends BrigadierSubCommand {
 
     /**
      * Creates a key with the given string.

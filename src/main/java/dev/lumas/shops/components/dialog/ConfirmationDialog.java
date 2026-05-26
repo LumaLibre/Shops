@@ -87,8 +87,8 @@ public class ConfirmationDialog extends ShopsDialog {
 
         DialogBase base = DialogBase.builder(translate("shops.confirm.title"))
                 .canCloseWithEscape(true)
-                .body(CollectionUtil.ofNonNull(body, body2))
-                .inputs(CollectionUtil.ofNonNull(amountInput))
+                .body(CollectionUtil.ofNonNulls(body, body2))
+                .inputs(CollectionUtil.ofNonNulls(amountInput))
                 .build();
 
         return Dialog.create(b -> b.empty()

@@ -1,25 +1,31 @@
 package dev.lumas.shops.commands.items;
 
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import dev.lumas.core.annotation.Argument;
 import dev.lumas.core.annotation.Autowire;
+import dev.lumas.core.annotation.BrigadierExecutor;
 import dev.lumas.core.annotation.CommandMeta;
 import dev.lumas.core.annotation.Register;
-import dev.lumas.shops.Shops;
+import dev.lumas.core.annotation.Suggests;
+import dev.lumas.core.model.brigadier.BrigadierSubCommand;
 import dev.lumas.shops.commands.CommandManager;
-import dev.lumas.shops.manager.MarketManager;
+import dev.lumas.shops.commands.providers.KeyProvider;
 import dev.lumas.shops.components.dialog.AddMarketItemDialog;
 import dev.lumas.shops.components.templates.MarketTemplate;
-import dev.lumas.shops.interfaces.SubCommand;
+import dev.lumas.shops.manager.MarketManager;
 import dev.lumas.shops.util.Viewers;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.key.Key;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jspecify.annotations.NullMarked;
 
-import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @NullMarked
-@Register(Autowire.SUBCOMMAND)
+@Register(Autowire.BRIGADIER)
 @CommandMeta(
         name = "additem",
         playerOnly = true,
@@ -27,35 +33,33 @@ import java.util.List;
         permission = "shops.command.additem",
         usage = "/<command> additem <marketKey>"
 )
-public class AddItemCommand implements SubCommand {
+public class AddItemCommand implements BrigadierSubCommand {
 
-    @Override
-    public boolean execute(Shops plugin, CommandSender sender, String label, String[] args) {
-        Player player = (Player) sender;
+    @BrigadierExecutor
+    public void run(CommandSourceStack src, @Argument(value = "marketKey", provider = KeyProvider.class) Key marketKey) {
+        Player player = (Player) src.getSender();
         ItemStack itemStack = player.getInventory().getItemInMainHand();
         if (itemStack.getType().isAir()) {
             Viewers.sendMessage(player, "shops.messages.error.bad_item");
-            return true;
+            return;
         }
-        Key key = key(args[0]);
-        MarketTemplate template = MarketManager.INSTANCE.template(key);
-
+        MarketTemplate template = MarketManager.INSTANCE.template(marketKey);
         if (template == null) {
             Viewers.sendMessage(player, "shops.messages.error.no_market");
-            return true;
+            return;
         }
-
 
         AddMarketItemDialog dialog = new AddMarketItemDialog(player.locale(), template, itemStack);
         dialog.show(player);
-        return true;
     }
 
-    @Override
-    public List<String> tabComplete(Shops plugin, CommandSender sender, String[] args) {
-        if (args.length == 1) {
-            return MarketManager.INSTANCE.keys().stream().map(Key::asString).toList();
-        }
-        return List.of();
+    @Suggests("marketKey")
+    public CompletableFuture<Suggestions> suggestMarketKey(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
+        String remaining = builder.getRemaining().toLowerCase();
+        MarketManager.INSTANCE.keys().stream()
+                .map(Key::asString)
+                .filter(s -> s.toLowerCase().startsWith(remaining))
+                .forEach(builder::suggest);
+        return builder.buildFuture();
     }
 }
