@@ -51,7 +51,7 @@ bukkit {
     name = "Shops"
     main = "dev.lumas.shops.Shops"
     version = project.version.toString()
-    apiVersion = "26.1"
+    apiVersion = "1.21"
     foliaSupported = true
     depend = listOf("LumaCore")
 }

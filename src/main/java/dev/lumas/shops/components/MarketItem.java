@@ -8,6 +8,7 @@ import dev.lumas.shops.constants.PurchaseResult;
 import dev.lumas.shops.interfaces.Currency;
 import dev.lumas.shops.interfaces.Product;
 import dev.lumas.shops.util.ClassUtil;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -35,6 +36,7 @@ public class MarketItem implements Keyed {
     private final Stock stock;
     private final Currency<? extends Number> currency;
     private final Product product;
+    @Getter(AccessLevel.NONE)
     private final ItemStack stack;
 
     public PurchaseResult purchase(Market market, Player player) {
@@ -65,8 +67,8 @@ public class MarketItem implements Keyed {
 
     public ItemStack display(MarketState marketState, Locale locale) {
         // We have to rebuild the lore every time because stock may have changed.
-        ItemStack stackCopy = stack.clone();
-        List<Component> lore = stack.lore();
+        ItemStack stackCopy = stack();
+        List<Component> lore = stackCopy.lore();
         List<Component> components = lore != null ? lore : new ArrayList<>();
 
         addLines(components, locale, "shops.gui.itemstack.description");
@@ -81,11 +83,15 @@ public class MarketItem implements Keyed {
     }
 
     public Component displayName() {
-        ItemMeta meta = stack.getItemMeta();
+        ItemStack stackCopy = stack();
+        ItemMeta meta = stackCopy.getItemMeta();
         if (meta == null || !meta.hasCustomName()) {
-            return Component.text(ClassUtil.formatEnum(stack.getType()));
+            return Component.text(ClassUtil.formatEnum(stackCopy.getType()));
         }
         return Preconditions.checkNotNull(meta.customName(), "Item meta has no display name");
     }
 
+    public ItemStack stack() {
+        return stack.clone();
+    }
 }
