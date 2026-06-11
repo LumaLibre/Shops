@@ -38,8 +38,8 @@ public class AddItemCommand implements BrigadierSubCommand {
     @BrigadierExecutor
     public void run(CommandSourceStack src, @Argument(value = "marketKey", provider = KeyProvider.class) Key marketKey) {
         Player player = (Player) src.getSender();
-        ItemStack itemStack = player.getInventory().getItemInMainHand();
-        if (itemStack.getType().isAir()) {
+        ItemStack itemStack = player.getInventory().getItemInMainHand().clone();
+        if (itemStack.isEmpty()) {
             Viewers.sendMessage(player, "shops.messages.error.bad_item");
             return;
         }

@@ -52,7 +52,7 @@ public class SerializeItemCommand implements BrigadierSubCommand {
     public void run(CommandSourceStack src, @Argument(value = "flags", optional = true, provider = GreedyStringProvider.class) @Nullable String flagsArg) throws CommandSyntaxException {
         Set<String> flags = parseFlags(flagsArg);
         Player player = (Player) src.getSender();
-        ItemStack item = player.getInventory().getItemInMainHand();
+        ItemStack item = player.getInventory().getItemInMainHand().clone();
         if (item.isEmpty()) {
             throw NO_ITEM.create();
         }

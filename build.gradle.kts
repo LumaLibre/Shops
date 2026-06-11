@@ -54,4 +54,5 @@ bukkit {
     apiVersion = "1.21"
     foliaSupported = true
     depend = listOf("LumaCore")
+    softDepend = listOf("LumaItems")
 }

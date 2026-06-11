@@ -74,4 +74,8 @@ public class ShopsConfig {
     @Setting("max-purchase-amount")
     private int maxPurchaseAmount = 10;
 
+    @Comment("Debug mode.")
+    @Setting("debug")
+    private boolean debug = false;
+
 }

@@ -1,10 +1,9 @@
 package dev.lumas.shops.components.dialog;
 
 import com.google.common.base.Preconditions;
+import dev.lumas.core.util.PluginContextLogger;
 import dev.lumas.shops.components.Market;
 import dev.lumas.shops.components.MarketItem;
-import dev.lumas.shops.config.ShopsConfig;
-import dev.lumas.shops.manager.MarketManager;
 import dev.lumas.shops.components.data.KeyConsumer;
 import dev.lumas.shops.components.data.KeyConsumerRegistry;
 import dev.lumas.shops.components.data.Stock;
@@ -14,10 +13,12 @@ import dev.lumas.shops.components.product.CommandProductImpl;
 import dev.lumas.shops.components.product.LumaItemsProductImpl;
 import dev.lumas.shops.components.product.ShopItemProductImpl;
 import dev.lumas.shops.components.templates.MarketTemplate;
+import dev.lumas.shops.config.ShopsConfig;
 import dev.lumas.shops.constants.suppliers.Currencies;
 import dev.lumas.shops.constants.suppliers.Products;
 import dev.lumas.shops.interfaces.Product;
 import dev.lumas.shops.interfaces.ShopsDialog;
+import dev.lumas.shops.manager.MarketManager;
 import dev.lumas.shops.util.Numbers;
 import dev.lumas.shops.util.Viewers;
 import io.papermc.paper.dialog.Dialog;
@@ -44,6 +45,8 @@ import java.util.Map;
 @NullMarked
 @SuppressWarnings({"UnstableApiUsage", "PatternValidation"})
 public class AddMarketItemDialog extends ShopsDialog {
+
+    private static final PluginContextLogger LOGGER = PluginContextLogger.getPluginLogger();
 
     private static final String INPUT_CURRENCY = "currency_type";
     private static final String INPUT_PRODUCT_TYPE = "product_type";
@@ -215,6 +218,9 @@ public class AddMarketItemDialog extends ShopsDialog {
         String namespace = marketKey.namespace();
 
         Map<Key, MarketItem> existing = session.market().items();
+        if (ShopsConfig.instance().debug()) {
+            LOGGER.info("Existing items: " + existing.keySet());
+        }
         Key candidate = Key.key(namespace, basePath);
         int suffix = 2;
         while (existing.containsKey(candidate)) {

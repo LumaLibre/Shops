@@ -151,6 +151,10 @@ public final class MarketManager {
      */
     @SneakyThrows
     public MarketTemplate addItem(Key marketKey, MarketItem item, int index) {
+        if (item.stack().isEmpty()) {
+            throw new IllegalArgumentException("Item stack cannot be empty");
+        }
+
         MarketTemplate current = requireTemplate(marketKey);
         if (current.items().containsKey(item.key())) {
             throw new IllegalStateException("Item already exists in market: " + item.key());
