@@ -67,7 +67,7 @@ public class MarketItem implements Keyed {
 
     public ItemStack display(MarketState marketState, Locale locale) {
         // We have to rebuild the lore every time because stock may have changed.
-        ItemStack stackCopy = stack();
+        ItemStack stackCopy = displayStack();
         List<Component> lore = stackCopy.lore();
         List<Component> components = lore != null ? lore : new ArrayList<>();
 
@@ -83,7 +83,7 @@ public class MarketItem implements Keyed {
     }
 
     public Component displayName() {
-        ItemStack stackCopy = stack();
+        ItemStack stackCopy = displayStack();
         ItemMeta meta = stackCopy.getItemMeta();
         if (meta == null || !meta.hasCustomName()) {
             return Component.text(ClassUtil.formatEnum(stackCopy.getType()));
@@ -91,7 +91,16 @@ public class MarketItem implements Keyed {
         return Preconditions.checkNotNull(meta.customName(), "Item meta has no display name");
     }
 
+    /** The stored display item, as saved on the market template. */
     public ItemStack stack() {
         return stack.clone();
+    }
+
+    /**
+     * The item to show in menus. Usually {@link #stack()}, but the product gets to swap in
+     * its own rendering — e.g. a LumaItems product pulling the live item from its API.
+     */
+    public ItemStack displayStack() {
+        return product.render(stack());
     }
 }

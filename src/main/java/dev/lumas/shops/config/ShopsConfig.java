@@ -78,4 +78,7 @@ public class ShopsConfig {
     @Setting("debug")
     private boolean debug = false;
 
+    @Comment("If an item 'product' is a reference to a LumaItem, should we pull the item from LumaItems' API and try to render it using that?")
+    @Setting("luma-items-render")
+    private boolean lumaItemsRender = false;
 }

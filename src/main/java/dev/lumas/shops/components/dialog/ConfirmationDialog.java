@@ -58,7 +58,7 @@ public class ConfirmationDialog extends ShopsDialog {
 
     @Override
     public Dialog build() {
-        ItemStack itemStack = marketItem.stack();
+        ItemStack itemStack = marketItem.displayStack();
         Component price = marketItem.currency().readablePrice();
         int remainingStock = market.state().getRemainingStock(marketItem.stock().player(), PurchaseReceipt.of(player.getUniqueId(), marketItem.key()));
 
