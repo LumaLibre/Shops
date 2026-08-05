@@ -52,11 +52,13 @@ public class LumaItemCurrencyDialog extends ShopsDialog {
 
     @Override
     public Dialog build() {
+        LumaItemsCurrencyImpl current = session.editingCurrency(LumaItemsCurrencyImpl.class);
+
         DialogInput keyInput = DialogInput.text(INPUT_KEY, translate("shops.additem.lumaitem.key"))
-                .maxLength(64).width(250).build();
+                .maxLength(64).initial(current == null ? "" : current.amount().key()).width(250).build();
 
         DialogInput amountInput = DialogInput.text(INPUT_AMOUNT, translate("shops.additem.lumaitem.amount"))
-                .maxLength(16).initial("1").width(150).build();
+                .maxLength(16).initial(current == null ? "1" : String.valueOf(current.amount().amount())).width(150).build();
 
         ActionButton submitButton = ActionButton.builder(translate("shops.additem.button.submit"))
                 .action(DialogAction.customClick(submit.key(), null))

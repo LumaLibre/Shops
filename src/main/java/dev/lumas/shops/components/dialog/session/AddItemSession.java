@@ -27,11 +27,20 @@ public class AddItemSession {
     @Nullable
     private Currency<? extends Number> currency;
 
+    @Nullable
+    private MarketItem editing;
+
     public AddItemSession(MarketTemplate market, ItemStack stack, Product product, Stock stock) {
         this.market = market;
         this.stack = stack;
         this.product = product;
         this.stock = stock;
+    }
+
+    public <T extends Currency<? extends Number>> @Nullable T editingCurrency(Class<T> type) {
+        if (editing == null) return null;
+        Currency<? extends Number> current = editing.currency();
+        return type.isInstance(current) ? type.cast(current) : null;
     }
 
     public MarketItem build(Key key) {

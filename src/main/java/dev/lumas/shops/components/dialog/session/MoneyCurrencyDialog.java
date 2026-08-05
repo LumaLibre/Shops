@@ -25,6 +25,7 @@ import java.util.Locale;
 public class MoneyCurrencyDialog extends ShopsDialog {
 
     private static final String INPUT_AMOUNT = "amount";
+    private static final String DEFAULT_AMOUNT = "100";
 
     private final KeyConsumer<MoneyCurrencyDialog> submit = KeyConsumer.of(
             this,
@@ -53,7 +54,7 @@ public class MoneyCurrencyDialog extends ShopsDialog {
     public Dialog build() {
         DialogInput amountInput = DialogInput.text(INPUT_AMOUNT, translate("shops.additem.money.amount"))
                 .maxLength(16)
-                .initial("100")
+                .initial(initialAmount())
                 .width(200)
                 .build();
 
@@ -74,6 +75,12 @@ public class MoneyCurrencyDialog extends ShopsDialog {
                 .base(base)
                 .type(DialogType.confirmation(submitButton, cancelButton))
         );
+    }
+
+    /** Prefills with the current price when editing an item that's already priced in money. */
+    private String initialAmount() {
+        MoneyCurrencyImpl current = session.editingCurrency(MoneyCurrencyImpl.class);
+        return current == null ? DEFAULT_AMOUNT : String.valueOf(current.cost());
     }
 
     private void onSubmit(Player player, DialogResponseView view) {

@@ -30,6 +30,8 @@ import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.entity.Player;
@@ -43,6 +45,7 @@ import java.util.Locale;
 import java.util.Map;
 
 @NullMarked
+@Accessors(fluent = true)
 @SuppressWarnings({"UnstableApiUsage", "PatternValidation"})
 public class AddMarketItemDialog extends ShopsDialog {
 
@@ -64,6 +67,14 @@ public class AddMarketItemDialog extends ShopsDialog {
     private final MarketTemplate market;
     private final ItemStack itemToAdd;
 
+    /**
+     * When set, the dialog edits this item in place — every input starts on its current
+     * value and submitting replaces it instead of adding a new item. Its key is kept so
+     * purchase history stays attached.
+     */
+    @Setter
+    private @Nullable MarketItem editing;
+
     public AddMarketItemDialog(Locale locale, MarketTemplate market, ItemStack itemToAdd) {
         super(locale);
         this.market = market;
@@ -72,6 +83,9 @@ public class AddMarketItemDialog extends ShopsDialog {
 
     @Override
     public Dialog build() {
+        Currencies initialCurrency = editing == null ? Currencies.MONEY : editing.currency().type();
+        Products initialProduct = editing == null ? Products.SHOP_ITEM : editing.product().type();
+
         SingleOptionDialogInput currencyInput = DialogInput.singleOption(
                 INPUT_CURRENCY,
                 translate("shops.additem.input.currency"),
@@ -79,7 +93,7 @@ public class AddMarketItemDialog extends ShopsDialog {
                         .map(currencies -> SingleOptionDialogInput.OptionEntry.create(
                                 currencies.name(),
                                 translate("shops.additem.currency." + currencies.name().toLowerCase(Locale.ROOT)),
-                                currencies == Currencies.MONEY
+                                currencies == initialCurrency
                         ))
                         .toList()
         ).width(300).build();
@@ -91,25 +105,26 @@ public class AddMarketItemDialog extends ShopsDialog {
                         .map(products -> SingleOptionDialogInput.OptionEntry.create(
                                 products.name(),
                                 translate("shops.additem.product." + products.name().toLowerCase(Locale.ROOT)),
-                                products == Products.SHOP_ITEM
+                                products == initialProduct
                         ))
                         .toList()
         ).width(300).build();
 
         DialogInput productValueInput = DialogInput.text(INPUT_PRODUCT_VALUE, translate("shops.additem.input.product_value"))
                 .maxLength(412)
+                .initial(initialProductValue())
                 .width(300)
                 .build();
 
         DialogInput playerStockInput = DialogInput.text(INPUT_PLAYER_STOCK, translate("shops.additem.input.player_stock"))
                 .maxLength(8)
-                .initial("-1")
+                .initial(editing == null ? "-1" : String.valueOf(editing.stock().player()))
                 .width(200)
                 .build();
 
         DialogInput globalStockInput = DialogInput.text(INPUT_GLOBAL_STOCK, translate("shops.additem.input.global_stock"))
                 .maxLength(10)
-                .initial("-1")
+                .initial(editing == null ? "-1" : String.valueOf(editing.stock().global()))
                 .width(200)
                 .build();
 
@@ -122,22 +137,24 @@ public class AddMarketItemDialog extends ShopsDialog {
                 .build();
 
         int itemCount = market.items().size();
-        // Range is [0, itemCount]. itemCount is "append at the end" (100% on the slider).
+        // Adding: range is [0, itemCount]. itemCount is "append at the end" (100% on the slider).
         // If the market is empty, max == 0 and the slider is at a single point.
-        float max = (float) itemCount;
+        // Editing: the item already occupies a slot, so the last valid position is itemCount - 1.
+        float max = editing == null ? (float) itemCount : (float) (itemCount - 1);
+        float initialIndex = editing == null ? max : Math.max(0f, market.indexOf(editing.key()));
         DialogInput indexInput = DialogInput.numberRange(
                 INPUT_INDEX,
                 translate("shops.additem.input.index"),
                 0f,
                 max
-        ).step(1f).initial(max).labelFormat("%s: %s").width(300).build();
+        ).step(1f).initial(initialIndex).labelFormat("%s: %s").width(300).build();
 
 
-        DialogBase base = DialogBase.builder(translate("shops.additem.title"))
+        DialogBase base = DialogBase.builder(translate(editing == null ? "shops.additem.title" : "shops.edititem.title"))
                 .canCloseWithEscape(false)
                 .body(List.of(
                         DialogBody.item(itemToAdd)
-                                .description(DialogBody.plainMessage(translate("shops.additem.description")))
+                                .description(DialogBody.plainMessage(translate(editing == null ? "shops.additem.description" : "shops.edititem.description")))
                                 .build()
                 ))
                 .inputs(List.of(currencyInput, productInput, productValueInput, playerStockInput, globalStockInput, indexInput))
@@ -155,7 +172,9 @@ public class AddMarketItemDialog extends ShopsDialog {
         String productValue = view.getText(INPUT_PRODUCT_VALUE);
         int playerStock = Numbers.parseInt(view.getText(INPUT_PLAYER_STOCK), -1);
         int globalStock = Numbers.parseInt(view.getText(INPUT_GLOBAL_STOCK), -1);
-        int index = Math.round(Numbers.unbox(view.getFloat(INPUT_INDEX), (float) market.items().size()));
+        // Falls back to appending, or to the item's current position when editing.
+        float fallbackIndex = editing == null ? (float) market.items().size() : Math.max(0f, market.indexOf(editing.key()));
+        int index = Math.round(Numbers.unbox(view.getFloat(INPUT_INDEX), fallbackIndex));
 
         if (currencyName == null || productName == null) {
             Viewers.sendMessage(player, "shops.additem.error.incomplete");
@@ -172,9 +191,17 @@ public class AddMarketItemDialog extends ShopsDialog {
         }
 
         AddItemSession session = new AddItemSession(market, itemToAdd, product, new Stock(playerStock, globalStock));
+        session.editing(editing);
 
         // Dispatch into currency sub-flow. When complete, finish() is called with the populated session.
-        CurrencyFlow.start(currencyType, session, player, () -> finish(player, session, index));
+        // Cancelling drops the player back here so they can pick a different currency.
+        CurrencyFlow.start(currencyType, session, player, () -> finish(player, session, index), () -> show(player));
+    }
+
+    private String initialProductValue() {
+        if (editing == null) return "";
+        Object value = editing.product().get();
+        return value == null ? "" : value.toString();
     }
 
     private @Nullable Product buildProduct(Products type, @org.jspecify.annotations.Nullable String value) {
@@ -192,12 +219,18 @@ public class AddMarketItemDialog extends ShopsDialog {
     }
 
     private void finish(Player player, AddItemSession session, int index) {
-        Key key = deriveItemKey(session);
+        MarketItem edited = editing;
+        Key key = edited != null ? edited.key() : deriveItemKey(session);
         MarketItem item = session.build(key);
         try {
             Key marketKey = session.market().key();
-            MarketManager.INSTANCE.addItem(marketKey, item, index);
-            Viewers.sendMessage(player, "shops.additem.success", key);
+            if (edited != null) {
+                MarketManager.INSTANCE.replaceItem(marketKey, item, index);
+                Viewers.sendMessage(player, "shops.edititem.success", key);
+            } else {
+                MarketManager.INSTANCE.addItem(marketKey, item, index);
+                Viewers.sendMessage(player, "shops.additem.success", key);
+            }
 
             if (ShopsConfig.instance().openAfterAddingItem()) {
                 Market newMarket = MarketManager.INSTANCE.market(marketKey, player.locale());

@@ -178,6 +178,40 @@ public final class MarketManager {
     }
 
     /**
+     * Replaces the existing item carrying {@code item}'s key and moves it to {@code index},
+     * which is clamped to {@code [0, size - 1]}. The key is kept so purchase history keeps
+     * pointing at the same item.
+     *
+     * @throws IllegalArgumentException if the item stack is empty or the item is not present
+     * @throws IllegalStateException if the market is missing
+     */
+    @SneakyThrows
+    public MarketTemplate replaceItem(Key marketKey, MarketItem item, int index) {
+        if (item.stack().isEmpty()) {
+            throw new IllegalArgumentException("Item stack cannot be empty");
+        }
+
+        MarketTemplate current = requireTemplate(marketKey);
+        if (!current.items().containsKey(item.key())) {
+            throw new IllegalArgumentException("Item does not exist in market: " + item.key());
+        }
+
+        List<MarketItem> others = current.items().values().stream()
+                .filter(existing -> !existing.key().equals(item.key()))
+                .toList();
+
+        Map<Key, MarketItem> updated = new LinkedHashMap<>(current.items().size());
+        int clamped = Math.max(0, Math.min(index, others.size()));
+        for (int i = 0; i < others.size(); i++) {
+            if (i == clamped) updated.put(item.key(), item);
+            updated.put(others.get(i).key(), others.get(i));
+        }
+        if (!updated.containsKey(item.key())) updated.put(item.key(), item);
+
+        return writeAndCache(withItems(current, updated));
+    }
+
+    /**
      * Removes the item with {@code itemKey} from the market.
      *
      * @throws IllegalArgumentException if the market is missing or the item is not present

@@ -52,6 +52,15 @@ public class MarketTemplate implements Keyed {
         return List.copyOf(items.values());
     }
 
+    public int indexOf(Key key) {
+        int index = 0;
+        for (Key candidate : items.keySet()) {
+            if (candidate.equals(key)) return index;
+            index++;
+        }
+        return -1;
+    }
+
     private static SlotList defaultContentSlots(int size, List<SlotEntry> staticSlots) {
         Set<Integer> claimed = staticSlots.stream().map(SlotEntry::slot).collect(Collectors.toSet());
         return SlotList.of(IntStream.range(0, size).filter(i -> !claimed.contains(i)).boxed().toList());
