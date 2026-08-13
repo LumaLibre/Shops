@@ -1,5 +1,6 @@
 package dev.lumas.shops.components.dialog.session;
 
+import dev.lumas.shops.api.currency.CurrencySelection;
 import dev.lumas.shops.components.MarketItem;
 import dev.lumas.shops.components.data.Stock;
 import dev.lumas.shops.components.templates.MarketTemplate;
@@ -14,10 +15,9 @@ import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
 @Getter
-@Setter
 @NullMarked
 @Accessors(fluent = true)
-public class AddItemSession {
+public class AddItemSession implements CurrencySelection {
 
     private final MarketTemplate market;
     private final ItemStack stack;
@@ -27,6 +27,7 @@ public class AddItemSession {
     @Nullable
     private Currency<? extends Number> currency;
 
+    @Setter
     @Nullable
     private MarketItem editing;
 
@@ -37,10 +38,14 @@ public class AddItemSession {
         this.stock = stock;
     }
 
-    public <T extends Currency<? extends Number>> @Nullable T editingCurrency(Class<T> type) {
-        if (editing == null) return null;
-        Currency<? extends Number> current = editing.currency();
-        return type.isInstance(current) ? type.cast(current) : null;
+    @Override
+    public void currency(Currency<? extends Number> currency) {
+        this.currency = currency;
+    }
+
+    @Override
+    public @Nullable Currency<? extends Number> editingCurrency() {
+        return editing == null ? null : editing.currency();
     }
 
     public MarketItem build(Key key) {

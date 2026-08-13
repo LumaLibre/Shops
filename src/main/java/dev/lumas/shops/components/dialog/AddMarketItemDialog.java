@@ -2,13 +2,14 @@ package dev.lumas.shops.components.dialog;
 
 import com.google.common.base.Preconditions;
 import dev.lumas.core.util.PluginContextLogger;
+import dev.lumas.shops.api.currency.CurrencyRegistry;
+import dev.lumas.shops.api.currency.CurrencyType;
 import dev.lumas.shops.components.Market;
 import dev.lumas.shops.components.MarketItem;
 import dev.lumas.shops.components.data.KeyConsumer;
 import dev.lumas.shops.components.data.KeyConsumerRegistry;
 import dev.lumas.shops.components.data.Stock;
 import dev.lumas.shops.components.dialog.session.AddItemSession;
-import dev.lumas.shops.components.dialog.session.CurrencyFlow;
 import dev.lumas.shops.components.product.CommandProductImpl;
 import dev.lumas.shops.components.product.LumaItemsProductImpl;
 import dev.lumas.shops.components.product.ShopItemProductImpl;
@@ -83,17 +84,17 @@ public class AddMarketItemDialog extends ShopsDialog {
 
     @Override
     public Dialog build() {
-        Currencies initialCurrency = editing == null ? Currencies.MONEY : editing.currency().type();
+        CurrencyType<?> initialCurrency = editing == null ? Currencies.MONEY : editing.currency().type();
         Products initialProduct = editing == null ? Products.SHOP_ITEM : editing.product().type();
 
         SingleOptionDialogInput currencyInput = DialogInput.singleOption(
                 INPUT_CURRENCY,
                 translate("shops.additem.input.currency"),
-                Arrays.stream(Currencies.values())
-                        .map(currencies -> SingleOptionDialogInput.OptionEntry.create(
-                                currencies.name(),
-                                translate("shops.additem.currency." + currencies.name().toLowerCase(Locale.ROOT)),
-                                currencies == initialCurrency
+                CurrencyRegistry.INSTANCE.values().stream()
+                        .map(currency -> SingleOptionDialogInput.OptionEntry.create(
+                                currency.key().asString(),
+                                currency.displayName(locale()),
+                                currency.equals(initialCurrency)
                         ))
                         .toList()
         ).width(300).build();
@@ -181,7 +182,12 @@ public class AddMarketItemDialog extends ShopsDialog {
             return;
         }
 
-        Currencies currencyType = Currencies.valueOf(currencyName);
+        CurrencyType<?> currencyType = CurrencyRegistry.INSTANCE.resolve(currencyName);
+        if (currencyType == null) {
+            // The plugin owning that currency went away between opening the dialog and submitting it.
+            Viewers.sendMessage(player, "shops.additem.error.unknown_currency", currencyName);
+            return;
+        }
         Products productType = Products.valueOf(productName);
 
         Product product = buildProduct(productType, productValue);
@@ -193,9 +199,9 @@ public class AddMarketItemDialog extends ShopsDialog {
         AddItemSession session = new AddItemSession(market, itemToAdd, product, new Stock(playerStock, globalStock));
         session.editing(editing);
 
-        // Dispatch into currency sub-flow. When complete, finish() is called with the populated session.
-        // Cancelling drops the player back here so they can pick a different currency.
-        CurrencyFlow.start(currencyType, session, player, () -> finish(player, session, index), () -> show(player));
+        // Dispatch into the currency's own editor. When complete, finish() is called with the
+        // populated session. Cancelling drops the player back here so they can pick another currency.
+        currencyType.editor().open(player, session, () -> finish(player, session, index), () -> show(player));
     }
 
     private String initialProductValue() {

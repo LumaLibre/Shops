@@ -1,5 +1,6 @@
 package dev.lumas.shops.components.dialog.session;
 
+import dev.lumas.shops.api.currency.CurrencySelection;
 import dev.lumas.shops.components.currency.ItemStackCurrencyImpl;
 import dev.lumas.shops.components.data.KeyConsumer;
 import dev.lumas.shops.components.data.KeyConsumerRegistry;
@@ -39,14 +40,14 @@ public class ItemStackPickConfirmDialog extends ShopsDialog {
             ItemStackPickConfirmDialog::onReject
     );
 
-    private final AddItemSession session;
+    private final CurrencySelection selection;
     private final ItemStack picked;
     private final Runnable onComplete;
     private final Runnable onCancel;
 
-    public ItemStackPickConfirmDialog(Locale locale, AddItemSession session, ItemStack picked, Runnable onComplete, Runnable onCancel) {
+    public ItemStackPickConfirmDialog(Locale locale, CurrencySelection selection, ItemStack picked, Runnable onComplete, Runnable onCancel) {
         super(locale);
-        this.session = session;
+        this.selection = selection;
         this.picked = picked;
         this.onComplete = onComplete;
         this.onCancel = onCancel;
@@ -87,13 +88,13 @@ public class ItemStackPickConfirmDialog extends ShopsDialog {
     private void onConfirm(Player player, DialogResponseView view) {
         int amount = Numbers.parseInt(view.getText(INPUT_AMOUNT), picked.getAmount());
         if (amount < 1) amount = 1;
-        session.currency(ItemStackCurrencyImpl.of(picked, amount));
+        selection.currency(ItemStackCurrencyImpl.of(picked, amount));
         onComplete.run();
     }
 
     private void onReject(Player player, DialogResponseView view) {
         // Restart the pick. If they time out the next round, they go back to the main dialog.
-        ItemStackPickListener.INSTANCE.begin(session, player, onComplete, onCancel);
+        ItemStackPickListener.INSTANCE.begin(selection, player, onComplete, onCancel);
     }
 
     @Override

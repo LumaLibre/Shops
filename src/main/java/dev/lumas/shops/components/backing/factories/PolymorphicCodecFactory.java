@@ -7,7 +7,11 @@ import com.google.gson.reflect.TypeToken;
 import dev.lumas.shops.interfaces.Currency;
 import dev.lumas.shops.interfaces.Product;
 
-public class EnumTypeCodecFactory implements TypeAdapterFactory {
+/**
+ * Hands out the codecs for interfaces whose implementation is chosen by a {@code type} field:
+ * products (a fixed enum) and currencies (an open registry).
+ */
+public class PolymorphicCodecFactory implements TypeAdapterFactory {
 
     @Override
     @SuppressWarnings("unchecked")

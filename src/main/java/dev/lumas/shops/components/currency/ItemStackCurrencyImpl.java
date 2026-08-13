@@ -1,5 +1,6 @@
 package dev.lumas.shops.components.currency;
 
+import dev.lumas.shops.api.currency.CurrencyType;
 import dev.lumas.shops.constants.suppliers.Currencies;
 import dev.lumas.shops.interfaces.Currency;
 import dev.lumas.shops.util.ClassUtil;
@@ -26,7 +27,7 @@ public record ItemStackCurrencyImpl(ItemStackAmount amount) implements Currency<
     }
 
     @Override
-    public Currencies type() {
+    public CurrencyType<?> type() {
         return Currencies.ITEMSTACK;
     }
 

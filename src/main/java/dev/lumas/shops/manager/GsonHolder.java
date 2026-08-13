@@ -11,7 +11,7 @@ import dev.lumas.core.manager.Services;
 import dev.lumas.core.model.Service;
 import dev.lumas.shops.Shops;
 import dev.lumas.shops.annotations.Singleton;
-import dev.lumas.shops.components.backing.factories.EnumTypeCodecFactory;
+import dev.lumas.shops.components.backing.factories.PolymorphicCodecFactory;
 import dev.lumas.shops.interfaces.Accessor;
 import dev.lumas.shops.interfaces.Codec;
 import org.jspecify.annotations.NullMarked;
@@ -63,7 +63,7 @@ public final class GsonHolder implements Service, Accessor<Gson> {
             }
         }
 
-        builder.registerTypeAdapterFactory(new EnumTypeCodecFactory());
+        builder.registerTypeAdapterFactory(new PolymorphicCodecFactory());
 
         this.gson = builder.setPrettyPrinting()
                 .disableHtmlEscaping()

@@ -2,6 +2,7 @@ import java.nio.charset.Charset
 
 plugins {
     id("java")
+    id("maven-publish")
     id("io.freefair.lombok") version "9.5.0"
     id("xyz.jpenilla.run-paper") version "3.0.1"
     id("de.eldoria.plugin-yml.bukkit") version "0.9.0"
@@ -41,6 +42,32 @@ dependencies {
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(25))
+    withSourcesJar()
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "jsinco-repo"
+            url = uri("https://repo.jsinco.dev/releases")
+            credentials {
+                // get from environment
+                username = System.getenv("REPO_USERNAME")
+                password = System.getenv("REPO_PASSWORD")
+            }
+            authentication {
+                create<BasicAuthentication>("basic")
+            }
+        }
+    }
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = project.group.toString()
+            artifactId = project.name
+            version = project.version.toString()
+            from(components["java"])
+        }
+    }
 }
 
 tasks.runServer {

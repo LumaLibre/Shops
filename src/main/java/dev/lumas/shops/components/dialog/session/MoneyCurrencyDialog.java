@@ -1,5 +1,6 @@
 package dev.lumas.shops.components.dialog.session;
 
+import dev.lumas.shops.api.currency.CurrencySelection;
 import dev.lumas.shops.components.currency.MoneyCurrencyImpl;
 import dev.lumas.shops.components.data.KeyConsumer;
 import dev.lumas.shops.components.data.KeyConsumerRegistry;
@@ -41,12 +42,12 @@ public class MoneyCurrencyDialog extends ShopsDialog {
             }
     );
 
-    private final AddItemSession session;
+    private final CurrencySelection selection;
     private final Runnable onComplete;
 
-    public MoneyCurrencyDialog(Locale locale, AddItemSession session, Runnable onComplete) {
+    public MoneyCurrencyDialog(Locale locale, CurrencySelection selection, Runnable onComplete) {
         super(locale);
-        this.session = session;
+        this.selection = selection;
         this.onComplete = onComplete;
     }
 
@@ -79,14 +80,14 @@ public class MoneyCurrencyDialog extends ShopsDialog {
 
     /** Prefills with the current price when editing an item that's already priced in money. */
     private String initialAmount() {
-        MoneyCurrencyImpl current = session.editingCurrency(MoneyCurrencyImpl.class);
+        MoneyCurrencyImpl current = selection.editingCurrency(MoneyCurrencyImpl.class);
         return current == null ? DEFAULT_AMOUNT : String.valueOf(current.cost());
     }
 
     private void onSubmit(Player player, DialogResponseView view) {
         String raw = view.getText(INPUT_AMOUNT);
         double amount = Numbers.parseDouble(raw, 0);
-        session.currency(new MoneyCurrencyImpl(amount));
+        selection.currency(new MoneyCurrencyImpl(amount));
         onComplete.run();
     }
 

@@ -22,6 +22,14 @@ public abstract class ShopsDialog {
     }
 
     /**
+     * The locale this dialog renders in, for content that isn't a plain translation key.
+     * @return The viewer's locale.
+     */
+    protected final Locale locale() {
+        return locale;
+    }
+
+    /**
      * Builds the dialog.
      * @return The built dialog.
      */

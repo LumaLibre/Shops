@@ -1,15 +1,33 @@
 package dev.lumas.shops.interfaces;
 
-import dev.lumas.shops.constants.suppliers.Currencies;
+import dev.lumas.shops.api.currency.CurrencyType;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Represents a currency.
  * A currency is a type of item, physical or digital, that can be used to purchase items.
  * @param <T> The type of the currency.
  */
-public interface Currency<T extends Number> extends EnumType<Currencies> {
+public interface Currency<T extends Number> extends Accessor<Object> {
+
+    /**
+     * The registered type this currency was created from. Its key is what gets written to
+     * market JSON, and what the currency is looked up by when the market is read back.
+     * @return The currency type.
+     */
+    CurrencyType<?> type();
+
+    /**
+     * The amount this currency was built from, written back out as the {@code value} field of
+     * the market's JSON. It has to be an instance of {@link CurrencyType#amountType()} — the
+     * same object {@link CurrencyType#create(Object)} would take to rebuild this currency.
+     *
+     * @return The amount, or {@code null} to leave {@code value} out of the JSON entirely.
+     */
+    @Override
+    @Nullable Object get();
 
     /**
      * Gets the price of the currency.

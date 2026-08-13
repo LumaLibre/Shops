@@ -4,8 +4,8 @@ import com.google.common.base.Preconditions;
 import dev.lumas.core.annotation.Autowire;
 import dev.lumas.core.annotation.Provided;
 import dev.lumas.core.annotation.Register;
+import dev.lumas.shops.api.currency.CurrencySelection;
 import dev.lumas.shops.components.dialog.session.ItemStackPickConfirmDialog;
-import dev.lumas.shops.components.dialog.session.AddItemSession;
 import dev.lumas.shops.util.Scheduling;
 import dev.lumas.shops.util.Viewers;
 import net.kyori.adventure.text.Component;
@@ -42,7 +42,7 @@ public class ItemStackPickListener implements Listener {
     private final Map<UUID, Pending> pendingMap = new ConcurrentHashMap<>();
 
 
-    public void begin(AddItemSession session, Player player, Runnable onComplete, Runnable onCancel) {
+    public void begin(CurrencySelection selection, Player player, Runnable onComplete, Runnable onCancel) {
         Preconditions.checkState(!pendingMap.containsKey(player.getUniqueId()), "Player %s already has a pending item stack pick", player.getName());
 
         Title title = Title.title(
@@ -75,7 +75,7 @@ public class ItemStackPickListener implements Listener {
             player.showTitle(title);
         });
 
-        pendingMap.put(player.getUniqueId(), new Pending(session, onComplete, onCancel));
+        pendingMap.put(player.getUniqueId(), new Pending(selection, onComplete, onCancel));
     }
 
     /** Cancels and removes the session for {@code player}, if any. */
@@ -104,9 +104,9 @@ public class ItemStackPickListener implements Listener {
 
         // Hand off to a confirm dialog. If the player confirms, set the currency
         // and continue. If they cancel, restart the pick.
-        ItemStackPickConfirmDialog dialog = new ItemStackPickConfirmDialog(player.locale(), pending.session(), clicked.clone(), pending.onComplete(), pending.onCancel());
+        ItemStackPickConfirmDialog dialog = new ItemStackPickConfirmDialog(player.locale(), pending.selection(), clicked.clone(), pending.onComplete(), pending.onCancel());
         dialog.show(player);
     }
 
-    private record Pending(AddItemSession session, Runnable onComplete, Runnable onCancel) {}
+    private record Pending(CurrencySelection selection, Runnable onComplete, Runnable onCancel) {}
 }

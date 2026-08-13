@@ -1,5 +1,6 @@
 package dev.lumas.shops.components.dialog.session;
 
+import dev.lumas.shops.api.currency.CurrencySelection;
 import dev.lumas.shops.components.currency.LumaItemsCurrencyImpl;
 import dev.lumas.shops.components.data.KeyConsumer;
 import dev.lumas.shops.components.data.KeyConsumerRegistry;
@@ -41,18 +42,18 @@ public class LumaItemCurrencyDialog extends ShopsDialog {
             }
     );
 
-    private final AddItemSession session;
+    private final CurrencySelection selection;
     private final Runnable onComplete;
 
-    public LumaItemCurrencyDialog(Locale locale, AddItemSession session, Runnable onComplete) {
+    public LumaItemCurrencyDialog(Locale locale, CurrencySelection selection, Runnable onComplete) {
         super(locale);
-        this.session = session;
+        this.selection = selection;
         this.onComplete = onComplete;
     }
 
     @Override
     public Dialog build() {
-        LumaItemsCurrencyImpl current = session.editingCurrency(LumaItemsCurrencyImpl.class);
+        LumaItemsCurrencyImpl current = selection.editingCurrency(LumaItemsCurrencyImpl.class);
 
         DialogInput keyInput = DialogInput.text(INPUT_KEY, translate("shops.additem.lumaitem.key"))
                 .maxLength(64).initial(current == null ? "" : current.amount().key()).width(250).build();
@@ -87,7 +88,7 @@ public class LumaItemCurrencyDialog extends ShopsDialog {
             return;
         }
         int amount = Numbers.parseInt(view.getText(INPUT_AMOUNT), 1);
-        session.currency(LumaItemsCurrencyImpl.of(key, amount));
+        selection.currency(LumaItemsCurrencyImpl.of(key, amount));
         onComplete.run();
     }
 

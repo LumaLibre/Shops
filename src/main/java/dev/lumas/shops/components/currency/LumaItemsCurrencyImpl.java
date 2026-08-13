@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import dev.lumas.lumaitems.LumaItems;
 import dev.lumas.lumaitems.api.LumaItemsAPI;
 import dev.lumas.lumaitems.model.item.CustomItem;
+import dev.lumas.shops.api.currency.CurrencyType;
 import dev.lumas.shops.constants.suppliers.Currencies;
 import dev.lumas.shops.interfaces.Currency;
 import dev.lumas.shops.util.ClassUtil;
@@ -65,7 +66,7 @@ public record LumaItemsCurrencyImpl(LumaItemsAmount amount) implements Currency<
     }
 
     @Override
-    public Currencies type() {
+    public CurrencyType<?> type() {
         return Currencies.LUMAITEMS;
     }
 

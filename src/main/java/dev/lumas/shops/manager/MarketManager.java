@@ -3,6 +3,7 @@ package dev.lumas.shops.manager;
 import com.google.gson.Gson;
 import dev.lumas.core.util.PluginContextLogger;
 import dev.lumas.shops.Shops;
+import dev.lumas.shops.api.currency.UnknownCurrencyException;
 import dev.lumas.shops.components.Market;
 import dev.lumas.shops.components.MarketItem;
 import dev.lumas.shops.components.data.SlotEntry;
@@ -294,6 +295,15 @@ public final class MarketManager {
             return loaded;
         } catch (IOException e) {
             LOGGER.error("Failed to load market template " + file.getFileName(), e);
+            return null;
+        } catch (UnknownCurrencyException e) {
+            // A currency the market was built against is gone — usually the plugin that registered
+            // it is no longer installed. Drop the market rather than opening it with a broken price.
+            LOGGER.warning("Skipping market " + key + ": it prices items in '" + e.currencyId()
+                    + "', which no plugin has registered. Is the plugin that provides it still installed?");
+            return null;
+        } catch (RuntimeException e) {
+            LOGGER.error("Failed to read market template " + file.getFileName() + ", skipping it", e);
             return null;
         }
     }
