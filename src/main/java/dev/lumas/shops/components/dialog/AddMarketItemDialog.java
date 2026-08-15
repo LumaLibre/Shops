@@ -27,7 +27,6 @@ import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.input.SingleOptionDialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
@@ -154,9 +153,7 @@ public class AddMarketItemDialog extends ShopsDialog {
         DialogBase base = DialogBase.builder(translate(editing == null ? "shops.additem.title" : "shops.edititem.title"))
                 .canCloseWithEscape(false)
                 .body(List.of(
-                        DialogBody.item(itemToAdd)
-                                .description(DialogBody.plainMessage(translate(editing == null ? "shops.additem.description" : "shops.edititem.description")))
-                                .build()
+                        itemBody(itemToAdd, translate(editing == null ? "shops.additem.description" : "shops.edititem.description"))
                 ))
                 .inputs(List.of(currencyInput, productInput, productValueInput, playerStockInput, globalStockInput, indexInput))
                 .build();

@@ -1,12 +1,14 @@
 package dev.lumas.shops.util;
 
 import dev.lumas.shops.config.TranslatorService;
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentLike;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.translation.GlobalTranslator;
+import org.bukkit.inventory.ItemStack;
 
 import java.util.List;
 import java.util.Locale;
@@ -14,6 +16,17 @@ import java.util.regex.Pattern;
 
 @UtilityClass
 public final class ItemStacks {
+
+    @SuppressWarnings("UnstableApiUsage")
+    public static ItemStack displaySafe(ItemStack stack) {
+        ItemStack copy = stack.clone();
+        if (copy.hasData(DataComponentTypes.MAX_DAMAGE)
+                && copy.getDataOrDefault(DataComponentTypes.MAX_STACK_SIZE, 1) > 1) {
+            copy.unsetData(DataComponentTypes.MAX_DAMAGE);
+            copy.unsetData(DataComponentTypes.DAMAGE);
+        }
+        return copy;
+    }
 
     public static void addLines(List<Component> target, Locale locale, String key, Object... args) {
         String raw = TranslatorService.instance().getMiniMessageString(key, locale);

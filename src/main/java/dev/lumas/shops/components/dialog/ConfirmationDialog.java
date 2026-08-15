@@ -62,9 +62,7 @@ public class ConfirmationDialog extends ShopsDialog {
         Component price = marketItem.currency().readablePrice();
         int remainingStock = market.state().getRemainingStock(marketItem.stock().player(), PurchaseReceipt.of(player.getUniqueId(), marketItem.key()));
 
-        DialogBody body = DialogBody.item(itemStack)
-                .description(DialogBody.plainMessage(translate(showAmountSelector ? "shops.confirm.content.amount" : "shops.confirm.content", price)))
-                .build();
+        DialogBody body = itemBody(itemStack, translate(showAmountSelector ? "shops.confirm.content.amount" : "shops.confirm.content", price));
 
         DialogBody body2 = marketItem.stock().hasPlayerStock() ? DialogBody.plainMessage(translate("shops.confirm.player_stock", Component.text(remainingStock))) : null;
 

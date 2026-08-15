@@ -12,7 +12,6 @@ import io.papermc.paper.dialog.DialogResponseView;
 import io.papermc.paper.registry.data.dialog.ActionButton;
 import io.papermc.paper.registry.data.dialog.DialogBase;
 import io.papermc.paper.registry.data.dialog.action.DialogAction;
-import io.papermc.paper.registry.data.dialog.body.DialogBody;
 import io.papermc.paper.registry.data.dialog.input.DialogInput;
 import io.papermc.paper.registry.data.dialog.type.DialogType;
 import net.kyori.adventure.key.Key;
@@ -72,9 +71,7 @@ public class ItemStackPickConfirmDialog extends ShopsDialog {
         DialogBase base = DialogBase.builder(translate("shops.additem.itemstack.confirm_title"))
                 .canCloseWithEscape(false)
                 .body(List.of(
-                        DialogBody.item(picked.asOne())
-                                .description(DialogBody.plainMessage(translate("shops.additem.itemstack.confirm_body")))
-                                .build()
+                        itemBody(picked.asOne(), translate("shops.additem.itemstack.confirm_body"))
                 ))
                 .inputs(List.of(amountInput))
                 .build();
