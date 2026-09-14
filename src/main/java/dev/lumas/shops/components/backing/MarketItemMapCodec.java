@@ -9,6 +9,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import dev.lumas.shops.components.MarketItem;
 import dev.lumas.shops.components.data.Stock;
+import dev.lumas.shops.components.requirement.PermissionRequirement;
 import dev.lumas.shops.interfaces.Codec;
 import dev.lumas.shops.interfaces.Currency;
 import dev.lumas.shops.interfaces.Product;
@@ -16,6 +17,7 @@ import dev.lumas.shops.manager.GsonHolder;
 import lombok.SneakyThrows;
 import net.kyori.adventure.key.Key;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.Nullable;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -60,9 +62,12 @@ public class MarketItemMapCodec extends Codec<Map<Key, MarketItem>> {
             @SuppressWarnings("unchecked")
             Currency<? extends Number> currency = gson.fromJson(body.get("currency"), Currency.class);
             Product product = gson.fromJson(body.get("product"), Product.class);
+            @Nullable PermissionRequirement requirement = body.has("requirement")
+                    ? gson.fromJson(body.get("requirement"), PermissionRequirement.class)
+                    : null;
             ItemStack stack = gson.fromJson(body.get("stack"), ItemStack.class);
 
-            result.put(itemKey, new MarketItem(itemKey, stock, currency, product, stack));
+            result.put(itemKey, new MarketItem(itemKey, stock, currency, product, requirement, stack));
         }
         in.endObject();
         return result;

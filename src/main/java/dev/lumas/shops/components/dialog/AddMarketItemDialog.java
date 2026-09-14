@@ -13,6 +13,8 @@ import dev.lumas.shops.components.dialog.session.AddItemSession;
 import dev.lumas.shops.components.product.CommandProductImpl;
 import dev.lumas.shops.components.product.LumaItemsProductImpl;
 import dev.lumas.shops.components.product.ShopItemProductImpl;
+import dev.lumas.shops.components.requirement.MistralRequirement;
+import dev.lumas.shops.components.requirement.PermissionRequirement;
 import dev.lumas.shops.components.templates.MarketTemplate;
 import dev.lumas.shops.config.ShopsConfig;
 import dev.lumas.shops.constants.suppliers.Currencies;
@@ -56,6 +58,7 @@ public class AddMarketItemDialog extends ShopsDialog {
     private static final String INPUT_PRODUCT_VALUE = "product_value";
     private static final String INPUT_PLAYER_STOCK = "player_stock";
     private static final String INPUT_GLOBAL_STOCK = "global_stock";
+    private static final String INPUT_REQUIREMENT = "requirement";
     private static final String INPUT_INDEX = "index";
 
     private final KeyConsumer<AddMarketItemDialog> submit = KeyConsumer.of(
@@ -128,6 +131,18 @@ public class AddMarketItemDialog extends ShopsDialog {
                 .width(200)
                 .build();
 
+        boolean hasMistralRequirement = editing != null && editing.requirement() instanceof MistralRequirement;
+        SingleOptionDialogInput requirementInput = DialogInput.singleOption(
+                INPUT_REQUIREMENT,
+                translate("shops.additem.input.requirement"),
+                List.of(
+                        SingleOptionDialogInput.OptionEntry.create(
+                                "NONE", translate("shops.additem.requirement.none"), !hasMistralRequirement),
+                        SingleOptionDialogInput.OptionEntry.create(
+                                "MISTRAL", translate("shops.additem.requirement.mistral"), hasMistralRequirement)
+                )
+        ).width(300).build();
+
         ActionButton continueButton = ActionButton.builder(translate("shops.additem.button.continue"))
                 .action(DialogAction.customClick(submit.key(), null))
                 .build();
@@ -155,7 +170,8 @@ public class AddMarketItemDialog extends ShopsDialog {
                 .body(List.of(
                         itemBody(itemToAdd, translate(editing == null ? "shops.additem.description" : "shops.edititem.description"))
                 ))
-                .inputs(List.of(currencyInput, productInput, productValueInput, playerStockInput, globalStockInput, indexInput))
+                .inputs(List.of(currencyInput, productInput, productValueInput, playerStockInput, globalStockInput,
+                        requirementInput, indexInput))
                 .build();
 
         return Dialog.create(b -> b.empty()
@@ -168,6 +184,7 @@ public class AddMarketItemDialog extends ShopsDialog {
         String currencyName = view.getText(INPUT_CURRENCY);
         String productName = view.getText(INPUT_PRODUCT_TYPE);
         String productValue = view.getText(INPUT_PRODUCT_VALUE);
+        String requirementName = view.getText(INPUT_REQUIREMENT);
         int playerStock = Numbers.parseInt(view.getText(INPUT_PLAYER_STOCK), -1);
         int globalStock = Numbers.parseInt(view.getText(INPUT_GLOBAL_STOCK), -1);
         // Falls back to appending, or to the item's current position when editing.
@@ -193,7 +210,13 @@ public class AddMarketItemDialog extends ShopsDialog {
             return;
         }
 
-        AddItemSession session = new AddItemSession(market, itemToAdd, product, new Stock(playerStock, globalStock));
+        PermissionRequirement requirement = switch (requirementName == null ? "NONE" : requirementName) {
+            case "MISTRAL" -> new MistralRequirement();
+            default -> null;
+        };
+
+        AddItemSession session = new AddItemSession(
+                market, itemToAdd, product, new Stock(playerStock, globalStock), requirement);
         session.editing(editing);
 
         // Dispatch into the currency's own editor. When complete, finish() is called with the

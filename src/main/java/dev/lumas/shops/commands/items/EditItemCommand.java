@@ -93,7 +93,8 @@ public class EditItemCommand implements BrigadierSubCommand {
                 return 0;
             }
 
-            MarketItem updated = new MarketItem(itemKey, existing.stock(), existing.currency(), existing.product(), inHand);
+            MarketItem updated = new MarketItem(
+                    itemKey, existing.stock(), existing.currency(), existing.product(), existing.requirement(), inHand);
             MarketManager.INSTANCE.replaceItem(marketKey, updated, template.indexOf(itemKey));
             Viewers.sendMessage(player, "shops.messages.edit.item.success", itemKey, marketKey);
             return Command.SINGLE_SUCCESS;

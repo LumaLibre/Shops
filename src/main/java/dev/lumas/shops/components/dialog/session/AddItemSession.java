@@ -3,6 +3,7 @@ package dev.lumas.shops.components.dialog.session;
 import dev.lumas.shops.api.currency.CurrencySelection;
 import dev.lumas.shops.components.MarketItem;
 import dev.lumas.shops.components.data.Stock;
+import dev.lumas.shops.components.requirement.PermissionRequirement;
 import dev.lumas.shops.components.templates.MarketTemplate;
 import dev.lumas.shops.interfaces.Currency;
 import dev.lumas.shops.interfaces.Product;
@@ -23,6 +24,7 @@ public class AddItemSession implements CurrencySelection {
     private final ItemStack stack;
     private final Product product;
     private final Stock stock;
+    private final @Nullable PermissionRequirement requirement;
 
     @Nullable
     private Currency<? extends Number> currency;
@@ -32,10 +34,16 @@ public class AddItemSession implements CurrencySelection {
     private MarketItem editing;
 
     public AddItemSession(MarketTemplate market, ItemStack stack, Product product, Stock stock) {
+        this(market, stack, product, stock, null);
+    }
+
+    public AddItemSession(MarketTemplate market, ItemStack stack, Product product, Stock stock,
+                          @Nullable PermissionRequirement requirement) {
         this.market = market;
         this.stack = stack;
         this.product = product;
         this.stock = stock;
+        this.requirement = requirement;
     }
 
     @Override
@@ -50,6 +58,6 @@ public class AddItemSession implements CurrencySelection {
 
     public MarketItem build(Key key) {
         if (currency == null) throw new IllegalStateException("Currency not set");
-        return new MarketItem(key, stock, currency, product, stack);
+        return new MarketItem(key, stock, currency, product, requirement, stack);
     }
 }

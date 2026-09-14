@@ -3,6 +3,7 @@ package dev.lumas.shops.components;
 import com.google.common.base.Preconditions;
 import dev.lumas.shops.components.data.PurchaseReceipt;
 import dev.lumas.shops.components.data.Stock;
+import dev.lumas.shops.components.requirement.PermissionRequirement;
 import dev.lumas.shops.components.templates.MarketState;
 import dev.lumas.shops.constants.PurchaseResult;
 import dev.lumas.shops.interfaces.Currency;
@@ -15,10 +16,13 @@ import lombok.experimental.Accessors;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.Keyed;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,14 +40,22 @@ public class MarketItem implements Keyed {
     private final Stock stock;
     private final Currency<? extends Number> currency;
     private final Product product;
+    private final @Nullable PermissionRequirement requirement;
     @Getter(AccessLevel.NONE)
     private final ItemStack stack;
+
+    public MarketItem(Key key, Stock stock, Currency<? extends Number> currency, Product product, ItemStack stack) {
+        this(key, stock, currency, product, null, stack);
+    }
 
     public PurchaseResult purchase(Market market, Player player) {
         return purchase(market, player, 1);
     }
 
     public PurchaseResult purchase(Market market, Player player, int amount) {
+        if (requirement != null && !requirement.hasPermission(player)) {
+            return PurchaseResult.MISSING_PERMISSION;
+        }
         if (!currency.hasEnough(player, amount)) {
             return PurchaseResult.NOT_ENOUGH_CURRENCY;
         }
@@ -73,6 +85,10 @@ public class MarketItem implements Keyed {
 
         addLines(components, locale, "shops.gui.itemstack.description");
         addLines(components, locale, "shops.gui.itemstack.price", currency.readablePrice());
+        if (requirement != null) {
+            components.add(MiniMessage.miniMessage().deserialize(requirement.extraText())
+                    .decoration(TextDecoration.ITALIC, false));
+        }
         if (stock.hasGlobalStock()) {
             int globalStock = stock.global();
             addLines(components, locale, "shops.gui.itemstack.stock", marketState.getRemainingGlobalStock(globalStock, key), globalStock);

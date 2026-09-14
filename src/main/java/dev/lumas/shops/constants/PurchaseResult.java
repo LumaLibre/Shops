@@ -10,7 +10,8 @@ public enum PurchaseResult {
     SUCCESS("shops.messages.purchased"),
     NOT_ENOUGH_CURRENCY("shops.messages.not_enough_currency"),
     NOT_ENOUGH_STOCK("shops.messages.not_enough_stock"),
-    TOO_MANY_PURCHASES("shops.messages.too_many_purchases");
+    TOO_MANY_PURCHASES("shops.messages.too_many_purchases"),
+    MISSING_PERMISSION("shops.messages.missing_permission");
 
     private final String translationKey;
 
