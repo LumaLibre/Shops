@@ -8,6 +8,6 @@ public class MistralRequirement implements PermissionRequirement {
 
     @Override
     public String extraText() {
-        return "<white>★ <#CEFACF>Rank<gray>:<b><gradient:#fff2be:#fbaeb4:#FBABFD>Mistral Rank</gradient></b>";
+        return "<white>★ <#CEFACF>Extra<gray>: <b><gradient:#fff2be:#fbaeb4:#FBABFD>Mistral Rank</gradient></b>";
     }
 }
