@@ -16,16 +16,17 @@ import dev.lumas.shops.components.data.PurchaseReceipt;
 import dev.lumas.shops.components.templates.MarketState;
 import dev.lumas.shops.components.templates.MarketTemplate;
 import dev.lumas.shops.manager.MarketManager;
-import dev.lumas.shops.util.CollectionUtil;
 import dev.lumas.shops.util.Viewers;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.key.Key;
+import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
 
-import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @NullMarked
@@ -33,7 +34,7 @@ import java.util.concurrent.CompletableFuture;
 @CommandMeta(
         name = "setpurchases",
         permission = "shops.command.setpurchases",
-        usage = "/<command> setpurchases <marketKey> <itemKey> <amount> [targets]",
+        usage = "/<command> setpurchases <marketKey> <itemKey> <amount> [player]",
         parent = CommandManager.class
 )
 public class SetPurchasesCommand implements BrigadierSubCommand {
@@ -43,17 +44,12 @@ public class SetPurchasesCommand implements BrigadierSubCommand {
                     @Argument(value = "marketKey", provider = KeyProvider.class) Key marketKey,
                     @Argument(value = "itemKey", provider = KeyProvider.class) Key itemKey,
                     @Argument("amount") Integer amount,
-                    @Argument(value = "targets", optional = true) @Nullable List<Player> targets) {
+                    @Argument(value = "target", optional = true) @Nullable String target) {
         CommandSender sender = src.getSender();
-        List<Player> finalTargets = CollectionUtil.ofNonNulls(targets);
-
-        if (finalTargets.isEmpty()) {
-            if (sender instanceof Player target) {
-                finalTargets.add(target);
-            } else {
-                Viewers.sendMessage(sender, "shops.messages.error.player_not_found");
-                return;
-            }
+        OfflinePlayer player = target != null ? resolvePlayer(target) : sender instanceof Player self ? self : null;
+        if (player == null) {
+            Viewers.sendMessage(sender, "shops.messages.error.player_not_found");
+            return;
         }
 
         MarketTemplate template = MarketManager.INSTANCE.template(marketKey);
@@ -68,10 +64,29 @@ public class SetPurchasesCommand implements BrigadierSubCommand {
 
         int finalAmount = Math.max(0, amount);
         MarketState state = MarketManager.INSTANCE.state(marketKey);
-        for (Player player : finalTargets) {
-            state.setPurchases(PurchaseReceipt.of(player.getUniqueId(), itemKey), finalAmount);
-            Viewers.sendMessage(sender, "shops.messages.purchases.set", player.getName(), itemKey, finalAmount);
+        state.setPurchases(PurchaseReceipt.of(player.getUniqueId(), itemKey), finalAmount);
+
+        String name = player.getName() != null ? player.getName() : player.getUniqueId().toString();
+        Viewers.sendMessage(sender, "shops.messages.purchases.set", name, itemKey, finalAmount);
+    }
+
+    private static @Nullable OfflinePlayer resolvePlayer(String input) {
+        try {
+            return Bukkit.getOfflinePlayer(UUID.fromString(input));
+        } catch (IllegalArgumentException ignored) {
         }
+        Player online = Bukkit.getPlayerExact(input);
+        return online != null ? online : Bukkit.getOfflinePlayerIfCached(input);
+    }
+
+    @Suggests("target")
+    public CompletableFuture<Suggestions> suggestTarget(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
+        String remaining = builder.getRemaining().toLowerCase();
+        Bukkit.getOnlinePlayers().stream()
+                .map(Player::getName)
+                .filter(s -> s.toLowerCase().startsWith(remaining))
+                .forEach(builder::suggest);
+        return builder.buildFuture();
     }
 
     @Suggests("marketKey")
