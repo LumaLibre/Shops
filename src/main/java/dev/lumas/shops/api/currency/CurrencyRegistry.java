@@ -1,5 +1,8 @@
 package dev.lumas.shops.api.currency;
 
+import dev.lumas.shops.Shops;
+import dev.lumas.shops.manager.MarketManager;
+import dev.lumas.shops.util.InventoryUtil;
 import net.kyori.adventure.key.Key;
 import org.jspecify.annotations.NullMarked;
 import org.jspecify.annotations.Nullable;
@@ -40,19 +43,31 @@ public final class CurrencyRegistry {
      */
     public synchronized void register(CurrencyType<?> type) {
         CurrencyType<?> existing = types.putIfAbsent(type.key(), type);
-        if (existing != null && existing != type) {
+        if (existing == null) {
+            dropLoadedMarkets();
+        } else if (existing != type) {
             throw new IllegalStateException("A currency type is already registered under " + type.key());
         }
     }
 
     /**
-     * Removes a currency type. Markets already loaded keep working; markets read after this
-     * point fail to load if they price anything in it.
+     * Removes a currency type.
      * @param key The key to unregister.
      * @return true if a type was removed.
      */
     public synchronized boolean unregister(Key key) {
-        return types.remove(key) != null;
+        if (types.remove(key) == null) {
+            return false;
+        }
+        dropLoadedMarkets();
+        return true;
+    }
+
+    private static void dropLoadedMarkets() {
+        MarketManager.INSTANCE.invalidateAll();
+        if (Shops.instance().isEnabled()) {
+            InventoryUtil.closeAllMarkets();
+        }
     }
 
     /**
