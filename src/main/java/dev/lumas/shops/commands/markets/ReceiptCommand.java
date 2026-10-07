@@ -32,12 +32,12 @@ import java.util.concurrent.CompletableFuture;
 @NullMarked
 @Register(Autowire.BRIGADIER)
 @CommandMeta(
-        name = "setpurchases",
-        permission = "shops.command.setpurchases",
-        usage = "/<command> setpurchases <marketKey> <itemKey> <amount> [player]",
+        name = "receipt",
+        permission = "shops.command.receipt",
+        usage = "/<command> receipt <marketKey> <itemKey> <amount> [player]",
         parent = CommandManager.class
 )
-public class SetPurchasesCommand implements BrigadierSubCommand {
+public class ReceiptCommand implements BrigadierSubCommand {
 
     @BrigadierExecutor
     public void run(CommandSourceStack src,
