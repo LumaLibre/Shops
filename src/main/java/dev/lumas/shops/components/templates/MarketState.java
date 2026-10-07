@@ -48,4 +48,13 @@ public record MarketState(Key key, Map<PurchaseReceipt, Integer> receipts) imple
         receipts.merge(receipt, amount, Integer::sum);
         MarketManager.INSTANCE.save(this);
     }
+
+    public void setPurchases(PurchaseReceipt receipt, int amount) {
+        if (amount <= 0) {
+            receipts.remove(receipt);
+        } else {
+            receipts.put(receipt, amount);
+        }
+        MarketManager.INSTANCE.save(this);
+    }
 }
