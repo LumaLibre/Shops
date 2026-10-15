@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import dev.lumas.shops.interfaces.Codec;
 import dev.lumas.shops.interfaces.EnumType;
@@ -27,6 +28,11 @@ public abstract class EnumTypeCodec<E extends Enum<E>, T extends EnumType<E>> ex
 
     @Override
     public void write(JsonWriter out, T value) throws IOException {
+        if (value == null) {
+            out.nullValue();
+            return;
+        }
+
         E type = value.type();
         out.beginObject();
         out.name("type").value(type.name());
@@ -39,7 +45,12 @@ public abstract class EnumTypeCodec<E extends Enum<E>, T extends EnumType<E>> ex
     }
 
     @Override
-    public T read(JsonReader in) throws IOException {
+    public @Nullable T read(JsonReader in) throws IOException {
+        if (in.peek() == JsonToken.NULL) {
+            in.nextNull();
+            return null;
+        }
+
         E type = null;
         Object value = null;
         in.beginObject();

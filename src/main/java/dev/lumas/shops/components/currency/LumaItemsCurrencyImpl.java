@@ -1,6 +1,6 @@
 package dev.lumas.shops.components.currency;
 
-import com.google.common.base.Preconditions;
+import dev.lumas.core.util.PluginContextLogger;
 import dev.lumas.lumaitems.LumaItems;
 import dev.lumas.lumaitems.api.LumaItemsAPI;
 import dev.lumas.lumaitems.model.item.CustomItem;
@@ -13,8 +13,11 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.jspecify.annotations.Nullable;
 
 public record LumaItemsCurrencyImpl(LumaItemsAmount amount) implements Currency<Integer> {
+
+    private static final PluginContextLogger LOGGER = PluginContextLogger.getPluginLogger();
 
     @Override
     public Integer getBalance(Player player) {
@@ -76,20 +79,32 @@ public record LumaItemsCurrencyImpl(LumaItemsAmount amount) implements Currency<
     }
 
     @Override
+    public boolean isAvailable() {
+        return customItem() != null;
+    }
+
+    @Override
     public Component readablePrice(int multiplier) {
-        CustomItem customItem = LumaItemsAPI.getInstance().getCustomItem(amount.key());
-        // TODO: Fail gracefully
-        Preconditions.checkNotNull(customItem, "Custom item with key " + amount.key() + " does not exist");
+        int total = amount.amount() * multiplier;
+        CustomItem customItem = customItem();
+        if (customItem == null) {
+            LOGGER.warning("Cannot price in LumaItem '" + amount.key() + "': no custom item with that key exists");
+            return Component.text(total + "x " + amount.key());
+        }
 
         ItemStack itemStack = customItem.createItem().getSecond();
         Component customName = itemStack.getItemMeta().customName();
         Component name = customName != null ? customName : Component.text(ClassUtil.formatEnum(itemStack.getType()));
-        return Component.text((amount.amount() * multiplier) + "x ").append(name);
+        return Component.text(total + "x ").append(name);
     }
 
     @Override
     public Integer price() {
         return amount.amount();
+    }
+
+    private @Nullable CustomItem customItem() {
+        return LumaItemsAPI.getInstance().getCustomItem(amount.key());
     }
 
     public static LumaItemsCurrencyImpl of(String key, int amount) {

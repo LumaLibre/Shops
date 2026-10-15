@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import dev.lumas.core.annotation.ReflectIgnore;
 import dev.lumas.shops.api.currency.CurrencyRegistry;
@@ -30,6 +31,11 @@ public class CurrencyCodec extends Codec<Currency<?>> {
 
     @Override
     public void write(JsonWriter out, Currency<?> value) throws IOException {
+        if (value == null) {
+            out.nullValue();
+            return;
+        }
+
         CurrencyType<?> type = value.type();
         out.beginObject();
         out.name("type").value(type.key().asString());
@@ -42,7 +48,12 @@ public class CurrencyCodec extends Codec<Currency<?>> {
     }
 
     @Override
-    public Currency<?> read(JsonReader in) throws IOException {
+    public @Nullable Currency<?> read(JsonReader in) throws IOException {
+        if (in.peek() == JsonToken.NULL) {
+            in.nextNull();
+            return null;
+        }
+
         CurrencyType<?> type = null;
         Object amount = null;
         in.beginObject();

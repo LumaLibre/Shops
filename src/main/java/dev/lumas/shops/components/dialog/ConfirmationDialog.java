@@ -59,7 +59,7 @@ public class ConfirmationDialog extends ShopsDialog {
     @Override
     public Dialog build() {
         ItemStack itemStack = marketItem.displayStack();
-        Component price = marketItem.currency().readablePrice();
+        Component price = marketItem.readablePrice(1);
         int remainingStock = market.state().getRemainingStock(marketItem.stock().player(), PurchaseReceipt.of(player.getUniqueId(), marketItem.key()));
 
         DialogBody body = itemBody(itemStack, translate(showAmountSelector ? "shops.confirm.content.amount" : "shops.confirm.content", price));
@@ -107,7 +107,7 @@ public class ConfirmationDialog extends ShopsDialog {
         Scheduling.entity(player, () -> {
             PurchaseResult result = marketItem.purchase(market, player, amount);
             Component component = Component.text(amount + "x ").append(marketItem.displayName());
-            Component price = marketItem.currency().readablePrice(amount);
+            Component price = marketItem.readablePrice(amount);
 
             Viewers.sendMessage(player, result.translate(component, price));
 

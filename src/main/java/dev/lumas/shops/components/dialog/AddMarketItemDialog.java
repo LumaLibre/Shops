@@ -86,8 +86,12 @@ public class AddMarketItemDialog extends ShopsDialog {
 
     @Override
     public Dialog build() {
-        CurrencyType<?> initialCurrency = editing == null ? Currencies.MONEY : editing.currency().type();
-        Products initialProduct = editing == null ? Products.SHOP_ITEM : editing.product().type();
+        CurrencyType<?> initialCurrency = editing == null || editing.currency() == null
+                ? Currencies.MONEY
+                : editing.currency().type();
+        Products initialProduct = editing == null || editing.product() == null
+                ? Products.SHOP_ITEM
+                : editing.product().type();
 
         SingleOptionDialogInput currencyInput = DialogInput.singleOption(
                 INPUT_CURRENCY,
@@ -225,7 +229,7 @@ public class AddMarketItemDialog extends ShopsDialog {
     }
 
     private String initialProductValue() {
-        if (editing == null) return "";
+        if (editing == null || editing.product() == null) return "";
         Object value = editing.product().get();
         return value == null ? "" : value.toString();
     }

@@ -55,7 +55,19 @@ public interface Currency<T extends Number> extends Accessor<Object> {
     }
 
     /**
-     * Gets the price of the currency in a readable format.
+     * Whether this currency can still be charged. A currency priced in something the server can
+     * no longer resolve — a custom item that was deleted, a plugin that was pulled — reports
+     * {@code false}, which makes the items priced in it unpurchasable instead of breaking the
+     * market they sit in.
+     * @return True if the currency can be charged.
+     */
+    default boolean isAvailable() {
+        return true;
+    }
+
+    /**
+     * Gets the price of the currency in a readable format. Never throws: a currency that can no
+     * longer resolve what it's priced in falls back to something printable.
      * @return The price of the currency in a readable format.
      */
     Component readablePrice(int multiplier);

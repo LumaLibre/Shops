@@ -36,16 +36,33 @@ import static dev.lumas.shops.util.ItemStacks.addLines;
 @Accessors(fluent = true)
 public class MarketItem implements Keyed {
 
+    private static final String UNAVAILABLE_KEY = "shops.messages.unavailable";
+
     private transient final Key key;
     private final Stock stock;
-    private final Currency<? extends Number> currency;
-    private final Product product;
+    private final @Nullable Currency<? extends Number> currency;
+    private final @Nullable Product product;
     private final @Nullable PermissionRequirement requirement;
     @Getter(AccessLevel.NONE)
     private final ItemStack stack;
 
-    public MarketItem(Key key, Stock stock, Currency<? extends Number> currency, Product product, ItemStack stack) {
+    public MarketItem(Key key, Stock stock, @Nullable Currency<? extends Number> currency,
+                      @Nullable Product product, ItemStack stack) {
         this(key, stock, currency, product, null, stack);
+    }
+
+    public boolean isAvailable() {
+        return currency != null && product != null && currency.isAvailable() && product.isAvailable();
+    }
+
+    /**
+     * The price to show players, or an unavailable notice when there's no currency to quote.
+     *
+     * @param multiplier How many of this item the price covers.
+     * @return The readable price.
+     */
+    public Component readablePrice(int multiplier) {
+        return currency == null ? Component.translatable(UNAVAILABLE_KEY) : currency.readablePrice(multiplier);
     }
 
     public PurchaseResult purchase(Market market, Player player) {
@@ -53,6 +70,11 @@ public class MarketItem implements Keyed {
     }
 
     public PurchaseResult purchase(Market market, Player player, int amount) {
+        Currency<? extends Number> currency = this.currency;
+        Product product = this.product;
+        if (currency == null || product == null || !currency.isAvailable() || !product.isAvailable()) {
+            return PurchaseResult.UNAVAILABLE;
+        }
         if (requirement != null && !requirement.hasPermission(player)) {
             return PurchaseResult.MISSING_PERMISSION;
         }
@@ -84,7 +106,11 @@ public class MarketItem implements Keyed {
         List<Component> components = lore != null ? lore : new ArrayList<>();
 
         addLines(components, locale, "shops.gui.itemstack.description");
-        addLines(components, locale, "shops.gui.itemstack.price", currency.readablePrice());
+        if (isAvailable()) {
+            addLines(components, locale, "shops.gui.itemstack.price", readablePrice(1));
+        } else {
+            addLines(components, locale, "shops.gui.itemstack.unavailable");
+        }
         if (requirement != null) {
             components.add(MiniMessage.miniMessage().deserialize(requirement.extraText())
                     .decoration(TextDecoration.ITALIC, false));
@@ -117,6 +143,6 @@ public class MarketItem implements Keyed {
      * its own rendering — e.g. a LumaItems product pulling the live item from its API.
      */
     public ItemStack displayStack() {
-        return product.render(stack());
+        return product == null ? stack() : product.render(stack());
     }
 }

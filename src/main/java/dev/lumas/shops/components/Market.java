@@ -3,7 +3,9 @@ package dev.lumas.shops.components;
 import dev.lumas.shops.components.dialog.ConfirmationDialog;
 import dev.lumas.shops.components.templates.MarketState;
 import dev.lumas.shops.components.templates.MarketTemplate;
+import dev.lumas.shops.constants.PurchaseResult;
 import dev.lumas.shops.interfaces.PaginatedInventory;
+import dev.lumas.shops.util.Viewers;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import lombok.experimental.Delegate;
@@ -56,6 +58,10 @@ public class Market extends PaginatedInventory<MarketItem> {
     }
 
     public void prePurchase(MarketItem marketItem, Player player, boolean showAmountSelector) {
+        if (!marketItem.isAvailable()) {
+            Viewers.sendMessage(player, PurchaseResult.UNAVAILABLE.translate());
+            return;
+        }
         ConfirmationDialog dialog = new ConfirmationDialog(player, this, marketItem, showAmountSelector);
         dialog.show(player);
     }

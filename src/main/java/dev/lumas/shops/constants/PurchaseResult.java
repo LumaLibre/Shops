@@ -11,7 +11,8 @@ public enum PurchaseResult {
     NOT_ENOUGH_CURRENCY("shops.messages.not_enough_currency"),
     NOT_ENOUGH_STOCK("shops.messages.not_enough_stock"),
     TOO_MANY_PURCHASES("shops.messages.too_many_purchases"),
-    MISSING_PERMISSION("shops.messages.missing_permission");
+    MISSING_PERMISSION("shops.messages.missing_permission"),
+    UNAVAILABLE("shops.messages.unavailable");
 
     private final String translationKey;
 
