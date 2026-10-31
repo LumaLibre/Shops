@@ -4,6 +4,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
+import dev.lumas.shops.components.requirement.CustomRequirement;
 import dev.lumas.shops.components.requirement.MistralRequirement;
 import dev.lumas.shops.components.requirement.PermissionRequirement;
 import dev.lumas.shops.interfaces.Codec;
@@ -31,6 +32,10 @@ public final class PermissionRequirementCodec extends Codec<PermissionRequiremen
         out.beginObject();
         if (value instanceof MistralRequirement) {
             out.name("type").value("MISTRAL");
+        } else if (value instanceof CustomRequirement custom) {
+            out.name("type").value("CUSTOM");
+            out.name("permission").value(custom.permission());
+            out.name("text").value(custom.extraText());
         } else {
             throw new IOException("Unknown permission requirement: " + value.getClass().getName());
         }
@@ -45,12 +50,15 @@ public final class PermissionRequirementCodec extends Codec<PermissionRequiremen
         }
 
         String type = null;
+        String permission = null;
+        String text = null;
         in.beginObject();
         while (in.hasNext()) {
-            if (in.nextName().equals("type")) {
-                type = in.nextString();
-            } else {
-                in.skipValue();
+            switch (in.nextName()) {
+                case "type" -> type = in.nextString();
+                case "permission" -> permission = in.nextString();
+                case "text" -> text = in.nextString();
+                default -> in.skipValue();
             }
         }
         in.endObject();
@@ -60,6 +68,12 @@ public final class PermissionRequirementCodec extends Codec<PermissionRequiremen
         }
         return switch (type.toUpperCase(Locale.ROOT)) {
             case "MISTRAL" -> new MistralRequirement();
+            case "CUSTOM" -> {
+                if (permission == null || permission.isBlank()) {
+                    throw new IOException("Custom permission requirement is missing a permission");
+                }
+                yield new CustomRequirement(permission, text == null ? "" : text);
+            }
             default -> throw new IOException("Unknown permission requirement type: " + type);
         };
     }

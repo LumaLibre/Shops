@@ -111,7 +111,7 @@ public class MarketItem implements Keyed {
         } else {
             addLines(components, locale, "shops.gui.itemstack.unavailable");
         }
-        if (requirement != null) {
+        if (requirement != null && !requirement.extraText().isBlank()) {
             components.add(MiniMessage.miniMessage().deserialize(requirement.extraText())
                     .decoration(TextDecoration.ITALIC, false));
         }

@@ -13,6 +13,7 @@ import dev.lumas.shops.components.dialog.session.AddItemSession;
 import dev.lumas.shops.components.product.CommandProductImpl;
 import dev.lumas.shops.components.product.LumaItemsProductImpl;
 import dev.lumas.shops.components.product.ShopItemProductImpl;
+import dev.lumas.shops.components.requirement.CustomRequirement;
 import dev.lumas.shops.components.requirement.MistralRequirement;
 import dev.lumas.shops.components.requirement.PermissionRequirement;
 import dev.lumas.shops.components.templates.MarketTemplate;
@@ -59,6 +60,8 @@ public class AddMarketItemDialog extends ShopsDialog {
     private static final String INPUT_PLAYER_STOCK = "player_stock";
     private static final String INPUT_GLOBAL_STOCK = "global_stock";
     private static final String INPUT_REQUIREMENT = "requirement";
+    private static final String INPUT_REQUIREMENT_PERMISSION = "requirement_permission";
+    private static final String INPUT_REQUIREMENT_TEXT = "requirement_text";
     private static final String INPUT_INDEX = "index";
 
     private final KeyConsumer<AddMarketItemDialog> submit = KeyConsumer.of(
@@ -135,17 +138,37 @@ public class AddMarketItemDialog extends ShopsDialog {
                 .width(200)
                 .build();
 
-        boolean hasMistralRequirement = editing != null && editing.requirement() instanceof MistralRequirement;
+        PermissionRequirement currentRequirement = editing == null ? null : editing.requirement();
+        String initialRequirement = currentRequirement instanceof MistralRequirement ? "MISTRAL"
+                : currentRequirement instanceof CustomRequirement ? "CUSTOM"
+                : "NONE";
         SingleOptionDialogInput requirementInput = DialogInput.singleOption(
                 INPUT_REQUIREMENT,
                 translate("shops.additem.input.requirement"),
                 List.of(
                         SingleOptionDialogInput.OptionEntry.create(
-                                "NONE", translate("shops.additem.requirement.none"), !hasMistralRequirement),
+                                "NONE", translate("shops.additem.requirement.none"), initialRequirement.equals("NONE")),
                         SingleOptionDialogInput.OptionEntry.create(
-                                "MISTRAL", translate("shops.additem.requirement.mistral"), hasMistralRequirement)
+                                "MISTRAL", translate("shops.additem.requirement.mistral"), initialRequirement.equals("MISTRAL")),
+                        SingleOptionDialogInput.OptionEntry.create(
+                                "CUSTOM", translate("shops.additem.requirement.custom"), initialRequirement.equals("CUSTOM"))
                 )
         ).width(300).build();
+
+        CustomRequirement currentCustom = currentRequirement instanceof CustomRequirement custom ? custom : null;
+        DialogInput requirementPermissionInput = DialogInput.text(
+                        INPUT_REQUIREMENT_PERMISSION, translate("shops.additem.input.requirement_permission"))
+                .maxLength(256)
+                .initial(currentCustom == null ? "" : currentCustom.permission())
+                .width(300)
+                .build();
+
+        DialogInput requirementTextInput = DialogInput.text(
+                        INPUT_REQUIREMENT_TEXT, translate("shops.additem.input.requirement_text"))
+                .maxLength(512)
+                .initial(currentCustom == null ? "" : currentCustom.extraText())
+                .width(300)
+                .build();
 
         ActionButton continueButton = ActionButton.builder(translate("shops.additem.button.continue"))
                 .action(DialogAction.customClick(submit.key(), null))
@@ -175,7 +198,7 @@ public class AddMarketItemDialog extends ShopsDialog {
                         itemBody(itemToAdd, translate(editing == null ? "shops.additem.description" : "shops.edititem.description"))
                 ))
                 .inputs(List.of(currencyInput, productInput, productValueInput, playerStockInput, globalStockInput,
-                        requirementInput, indexInput))
+                        requirementInput, requirementPermissionInput, requirementTextInput, indexInput))
                 .build();
 
         return Dialog.create(b -> b.empty()
@@ -214,10 +237,20 @@ public class AddMarketItemDialog extends ShopsDialog {
             return;
         }
 
-        PermissionRequirement requirement = switch (requirementName == null ? "NONE" : requirementName) {
-            case "MISTRAL" -> new MistralRequirement();
-            default -> null;
-        };
+        PermissionRequirement requirement;
+        switch (requirementName == null ? "NONE" : requirementName) {
+            case "MISTRAL" -> requirement = new MistralRequirement();
+            case "CUSTOM" -> {
+                String permission = view.getText(INPUT_REQUIREMENT_PERMISSION);
+                String text = view.getText(INPUT_REQUIREMENT_TEXT);
+                if (permission == null || permission.isBlank()) {
+                    Viewers.sendMessage(player, "shops.additem.error.bad_requirement");
+                    return;
+                }
+                requirement = new CustomRequirement(permission.trim(), text == null ? "" : text);
+            }
+            default -> requirement = null;
+        }
 
         AddItemSession session = new AddItemSession(
                 market, itemToAdd, product, new Stock(playerStock, globalStock), requirement);
